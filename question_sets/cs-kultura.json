@@ -1,0 +1,127 @@
+{
+ "id": "cs-kultura",
+ "lang": "cs",
+ "name": {
+  "cs": "Literatura, hudba a film",
+  "en": "Books, music and film (in Czech)"
+ },
+ "description": {
+  "cs": "Spisovatelé, skladatelé, malíři a filmaři.",
+  "en": "Writers, composers, painters and film-makers."
+ },
+ "open": [
+  {
+   "q": "Kdo složil operu Prodaná nevěsta?",
+   "a": "Bedřich Smetana"
+  },
+  {
+   "q": "Kdo napsal román Osudy dobrého vojáka Švejka za světové války?",
+   "a": "Jaroslav Hašek"
+  },
+  {
+   "q": "Kdo namaloval obraz Mona Lisa?",
+   "a": "Leonardo da Vinci"
+  },
+  {
+   "q": "Kdo napsal knihu Babička?",
+   "a": "Božena Němcová"
+  },
+  {
+   "q": "Kdo je autorem básně Máj?",
+   "a": "Karel Hynek Mácha"
+  },
+  {
+   "q": "Kdo složil operu Rusalka?",
+   "a": "Antonín Dvořák"
+  },
+  {
+   "q": "Kdo napsal drama Romeo a Julie?",
+   "a": "William Shakespeare"
+  },
+  {
+   "q": "Kdo namaloval slavné Slunečnice?",
+   "a": "Vincent van Gogh"
+  },
+  {
+   "q": "Kdo napsal román Válka s mloky?",
+   "a": "Karel Čapek"
+  },
+  {
+   "q": "Jaké slovo, poprvé použité ve hře R.U.R., dal světu Josef Čapek?",
+   "a": "robot"
+  },
+  {
+   "q": "Jak se jmenuje nejznámější kreslená postavička Zdeňka Milera?",
+   "a": "Krtek"
+  },
+  {
+   "q": "Kdo napsal Povídání o pejskovi a kočičce?",
+   "a": "Josef Čapek"
+  },
+  {
+   "q": "Kdo napsal knihu Malý princ?",
+   "a": "Antoine de Saint-Exupéry"
+  },
+  {
+   "q": "Kdo napsala sérii knih o Harrym Potterovi?",
+   "a": "J. K. Rowlingová"
+  },
+  {
+   "q": "Jak se jmenovala liverpoolská skupina, ve které hráli John Lennon a Paul McCartney?",
+   "a": "The Beatles"
+  },
+  {
+   "q": "Jak se jmenuje Mozartova opera, ve které vystupuje ptáčník Papageno?",
+   "a": "Kouzelná flétna"
+  },
+  {
+   "q": "Kdo napsal román Bídníci?",
+   "a": "Victor Hugo"
+  },
+  {
+   "q": "Kdo napsal humoristický román Saturnin?",
+   "a": "Zdeněk Jirotka"
+  },
+  {
+   "q": "Kdo je autorem Ferdy Mravence?",
+   "a": "Ondřej Sekora"
+  },
+  {
+   "q": "Kdo napsal novelu Spalovač mrtvol?",
+   "a": "Ladislav Fuks"
+  },
+  {
+   "q": "Který český rodák režíroval filmy Přelet nad kukaččím hnízdem a Amadeus?",
+   "a": "Miloš Forman"
+  },
+  {
+   "q": "Kdo režíroval film Pelíšky?",
+   "a": "Jan Hřebejk"
+  },
+  {
+   "q": "Jak se nazývá japonské umění skládání papíru?",
+   "a": "origami"
+  },
+  {
+   "q": "Jak se nazývá hudební nástroj, který má obvykle 88 kláves?",
+   "a": "klavír"
+  },
+  {
+   "q": "Jak se jmenuje hrdina Verneovy knihy, který obeplul svět za 80 dní?",
+   "a": "Phileas Fogg"
+  },
+  {
+   "q": "Jak se jmenoval český zpěvák, který zpíval Lady Karneval?",
+   "a": "Karel Gott"
+  },
+  {
+   "q": "Kdo napsal Ostře sledované vlaky?",
+   "a": "Bohumil Hrabal"
+  },
+  {
+   "q": "Jak se jmenuje hlavní hrdina Haškova románu?",
+   "a": "Josef Švejk"
+  }
+ ],
+ "yesno": []
+}

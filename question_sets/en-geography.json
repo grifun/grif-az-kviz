@@ -1,0 +1,151 @@
+{
+ "id": "en-geography",
+ "lang": "en",
+ "name": {
+  "cs": "Zeměpis (anglicky)",
+  "en": "Geography"
+ },
+ "description": {
+  "cs": "Hlavní města, hory, řeky a kontinenty – anglicky.",
+  "en": "Capitals, mountains, rivers and continents."
+ },
+ "open": [
+  {
+   "q": "What is the capital of Australia?",
+   "a": "Canberra"
+  },
+  {
+   "q": "What is the capital of Canada?",
+   "a": "Ottawa"
+  },
+  {
+   "q": "Which river flows through Cairo?",
+   "a": "Nile"
+  },
+  {
+   "q": "What is the highest mountain in the world?",
+   "a": "Mount Everest"
+  },
+  {
+   "q": "What is the largest ocean on Earth?",
+   "a": "Pacific Ocean"
+  },
+  {
+   "q": "What is the largest hot desert in the world?",
+   "a": "Sahara"
+  },
+  {
+   "q": "In which country is the Inca city of Machu Picchu?",
+   "a": "Peru"
+  },
+  {
+   "q": "What is the capital of Japan?",
+   "a": "Tokyo"
+  },
+  {
+   "q": "What is the largest island in the world?",
+   "a": "Greenland"
+  },
+  {
+   "q": "Which island country has Reykjavík as its capital?",
+   "a": "Iceland"
+  },
+  {
+   "q": "What is the longest river in Europe?",
+   "a": "Volga"
+  },
+  {
+   "q": "What is the capital of Norway?",
+   "a": "Oslo"
+  },
+  {
+   "q": "What is the smallest continent?",
+   "a": "Australia"
+  },
+  {
+   "q": "On which continent is the South Pole?",
+   "a": "Antarctica"
+  },
+  {
+   "q": "In which city does the Statue of Liberty stand?",
+   "a": "New York"
+  },
+  {
+   "q": "What is the capital of the Czech Republic?",
+   "a": "Prague"
+  },
+  {
+   "q": "Which river flows through Prague?",
+   "a": "Vltava"
+  },
+  {
+   "q": "What is the tallest waterfall in the world, in Venezuela?",
+   "a": "Angel Falls"
+  },
+  {
+   "q": "What is the capital of Ireland?",
+   "a": "Dublin"
+  },
+  {
+   "q": "What is the capital of Switzerland?",
+   "a": "Bern"
+  },
+  {
+   "q": "Which strait separates Spain from Morocco?",
+   "a": "Strait of Gibraltar"
+  },
+  {
+   "q": "Which European country is shaped like a boot?",
+   "a": "Italy"
+  },
+  {
+   "q": "What is the highest mountain in Africa?",
+   "a": "Kilimanjaro"
+  },
+  {
+   "q": "Which US national park is home to the Old Faithful geyser?",
+   "a": "Yellowstone"
+  },
+  {
+   "q": "Which country has had the largest population since 2023?",
+   "a": "India"
+  },
+  {
+   "q": "In which city is the Colosseum?",
+   "a": "Rome"
+  },
+  {
+   "q": "What is the capital of Ukraine?",
+   "a": "Kyiv"
+  },
+  {
+   "q": "What is the largest lake in Africa?",
+   "a": "Lake Victoria"
+  },
+  {
+   "q": "What is the capital of Egypt?",
+   "a": "Cairo"
+  },
+  {
+   "q": "What is the capital of Hungary?",
+   "a": "Budapest"
+  },
+  {
+   "q": "What is the capital of Portugal?",
+   "a": "Lisbon"
+  },
+  {
+   "q": "Which city is the capital of Slovakia?",
+   "a": "Bratislava"
+  },
+  {
+   "q": "Which river flows through Vienna and Budapest?",
+   "a": "Danube"
+  },
+  {
+   "q": "What is the capital of Sweden?",
+   "a": "Stockholm"
+  }
+ ],
+ "yesno": []
+}

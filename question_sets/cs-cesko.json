@@ -1,0 +1,109 @@
+{
+ "id": "cs-cesko",
+ "lang": "cs",
+ "name": {
+  "cs": "Česko",
+  "en": "Czechia (in Czech)"
+ },
+ "description": {
+  "cs": "Česká místa, dějiny, pověsti a osobnosti.",
+  "en": "Czech places, history, legends and people."
+ },
+ "open": [
+  {
+   "q": "Jak se jmenuje nejvyšší hora České republiky?",
+   "a": "Sněžka"
+  },
+  {
+   "q": "Kdo byl prvním prezidentem Československa?",
+   "a": "Tomáš Garrigue Masaryk"
+  },
+  {
+   "q": "Který panovník založil roku 1348 pražskou univerzitu?",
+   "a": "Karel IV.",
+   "h": "K. IV."
+  },
+  {
+   "q": "Jak se jmenuje řeka, která protéká Prahou?",
+   "a": "Vltava"
+  },
+  {
+   "q": "Kdo byl prvním československým kosmonautem?",
+   "a": "Vladimír Remek"
+  },
+  {
+   "q": "Jak se jmenuje sídlo prezidenta České republiky?",
+   "a": "Pražský hrad"
+  },
+  {
+   "q": "Jak se jmenuje největší rybník v České republice?",
+   "a": "Rožmberk"
+  },
+  {
+   "q": "Na kterém místě u Prahy proběhla roku 1620 bitva stavovského vojska s císařským?",
+   "a": "Bílá hora"
+  },
+  {
+   "q": "Jak se jmenuje nejstarší dochovaný most přes Vltavu v Praze?",
+   "a": "Karlův most"
+  },
+  {
+   "q": "Které město se nazývá moravskou metropolí?",
+   "a": "Brno"
+  },
+  {
+   "q": "Ve kterém městě se vaří pivo Pilsner Urquell?",
+   "a": "Plzeň"
+  },
+  {
+   "q": "Které lázeňské město je známé pramenem Vřídlo?",
+   "a": "Karlovy Vary"
+  },
+  {
+   "q": "Jak se jmenuje nejvyšší hora Hrubého Jeseníku?",
+   "a": "Praděd"
+  },
+  {
+   "q": "Kdo byl posledním českým králem z rodu Přemyslovců?",
+   "a": "Václav III.",
+   "h": "V. III."
+  },
+  {
+   "q": "Jak se jmenovala babička svatého Václava, první česká světice?",
+   "a": "Ludmila"
+  },
+  {
+   "q": "Jak se jmenuje největší česká jaderná elektrárna?",
+   "a": "Temelín"
+  },
+  {
+   "q": "Jak se jmenuje hora nad Libercem s vysílačem a hotelem?",
+   "a": "Ještěd"
+  },
+  {
+   "q": "Jak se jmenuje jihočeský hrad a zámek s barokním divadlem?",
+   "a": "Český Krumlov"
+  },
+  {
+   "q": "Jak se jmenuje nejznámější propast Moravského krasu?",
+   "a": "Macocha"
+  },
+  {
+   "q": "Jak se jmenovala bájná kněžna, která věštila slávu Prahy?",
+   "a": "Libuše"
+  },
+  {
+   "q": "Jak se jmenuje bájný praotec, který přivedl Čechy do země?",
+   "a": "praotec Čech"
+  },
+  {
+   "q": "Jak se jmenuje nejvyšší vrchol Šumavy?",
+   "a": "Velký Javor"
+  },
+  {
+   "q": "Jak se jmenuje zakladatel firmy na boty ze Zlína?",
+   "a": "Tomáš Baťa"
+  }
+ ],
+ "yesno": []
+}

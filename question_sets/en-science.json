@@ -1,0 +1,143 @@
+{
+ "id": "en-science",
+ "lang": "en",
+ "name": {
+  "cs": "Věda a příroda (anglicky)",
+  "en": "Science and nature"
+ },
+ "description": {
+  "cs": "Vesmír, zvířata, lidské tělo a chemie – anglicky.",
+  "en": "Space, animals, the human body and chemistry."
+ },
+ "open": [
+  {
+   "q": "What is the largest planet in the Solar System?",
+   "a": "Jupiter"
+  },
+  {
+   "q": "Which planet is closest to the Sun?",
+   "a": "Mercury"
+  },
+  {
+   "q": "Which planet is known as the Red Planet?",
+   "a": "Mars"
+  },
+  {
+   "q": "Which planet is famous for its large, bright rings?",
+   "a": "Saturn"
+  },
+  {
+   "q": "What is Earth's natural satellite called?",
+   "a": "Moon"
+  },
+  {
+   "q": "What process do plants use to make sugar from sunlight?",
+   "a": "photosynthesis"
+  },
+  {
+   "q": "Which gas do plants release during photosynthesis?",
+   "a": "oxygen"
+  },
+  {
+   "q": "What is the largest mammal on Earth?",
+   "a": "blue whale"
+  },
+  {
+   "q": "What is the fastest land animal?",
+   "a": "cheetah"
+  },
+  {
+   "q": "What is the largest species of cat?",
+   "a": "tiger"
+  },
+  {
+   "q": "Which organ pumps blood around the body?",
+   "a": "heart"
+  },
+  {
+   "q": "What is the largest organ of the human body?",
+   "a": "skin"
+  },
+  {
+   "q": "What is the smallest bone in the human body?",
+   "a": "stapes"
+  },
+  {
+   "q": "What is the hardest natural mineral?",
+   "a": "diamond"
+  },
+  {
+   "q": "Which metal is liquid at room temperature?",
+   "a": "mercury"
+  },
+  {
+   "q": "Which element has the chemical symbol Au?",
+   "a": "gold"
+  },
+  {
+   "q": "Who developed the theory of relativity?",
+   "a": "Albert Einstein"
+  },
+  {
+   "q": "Who discovered penicillin?",
+   "a": "Alexander Fleming"
+  },
+  {
+   "q": "Which Russian chemist created the periodic table?",
+   "a": "Dmitri Mendeleev"
+  },
+  {
+   "q": "Which monk from Brno is called the father of genetics?",
+   "a": "Gregor Mendel"
+  },
+  {
+   "q": "Who was the first person to walk on the Moon?",
+   "a": "Neil Armstrong"
+  },
+  {
+   "q": "Who was the first human in space?",
+   "a": "Yuri Gagarin"
+  },
+  {
+   "q": "Who was the first to patent the telephone?",
+   "a": "Alexander Graham Bell"
+  },
+  {
+   "q": "Which American inventor is linked with the light bulb and the phonograph?",
+   "a": "Thomas Edison"
+  },
+  {
+   "q": "What is the science of stars and space called?",
+   "a": "astronomy"
+  },
+  {
+   "q": "What is the fear of spiders called?",
+   "a": "arachnophobia"
+  },
+  {
+   "q": "Which sea animal has eight arms with suckers?",
+   "a": "octopus"
+  },
+  {
+   "q": "What is a triangle with all sides equal called?",
+   "a": "equilateral triangle"
+  },
+  {
+   "q": "What is an angle of exactly 90 degrees called?",
+   "a": "right angle"
+  },
+  {
+   "q": "What is a year with 366 days called?",
+   "a": "leap year"
+  },
+  {
+   "q": "Which blood cells carry oxygen around the body?",
+   "a": "red blood cells"
+  },
+  {
+   "q": "What is the frozen form of water called?",
+   "a": "ice"
+  }
+ ],
+ "yesno": []
+}

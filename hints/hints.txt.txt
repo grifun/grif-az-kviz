@@ -1,0 +1,6 @@
+docker build -t azkviz .
+
+docker run -d --name azkviz -p 8000:8000 `
+  -e AZKVIZ_EDIT_PASSWORD=yourpassword `
+  -v "${PWD}\question_sets:/srv/question_sets" `
+  azkviz

@@ -1,0 +1,59 @@
+{
+ "id": "cs-historie",
+ "lang": "cs",
+ "name": {
+  "cs": "Historie a mytologie",
+  "en": "History and mythology (in Czech)"
+ },
+ "description": {
+  "cs": "Starověk, objevitelé, bohové a legendy.",
+  "en": "Antiquity, explorers, gods and legends."
+ },
+ "open": [
+  {
+   "q": "Které antické město zničila roku 79 sopka Vesuv?",
+   "a": "Pompeje"
+  },
+  {
+   "q": "Kdo jako první člověk vstoupil na Měsíc?",
+   "a": "Neil Armstrong"
+  },
+  {
+   "q": "Kdo byl prvním člověkem ve vesmíru?",
+   "a": "Jurij Gagarin"
+  },
+  {
+   "q": "Který mořeplavec doplul roku 1492 do Ameriky?",
+   "a": "Kryštof Kolumbus"
+  },
+  {
+   "q": "Hrobku kterého faraona objevil roku 1922 Howard Carter?",
+   "a": "Tutanchamon"
+  },
+  {
+   "q": "Jak se jmenuje řecký bůh moří?",
+   "a": "Poseidon"
+  },
+  {
+   "q": "Kdo byl nejvyšším bohem řecké mytologie?",
+   "a": "Zeus"
+  },
+  {
+   "q": "Jak se jmenuje římská bohyně lásky a krásy?",
+   "a": "Venuše"
+  },
+  {
+   "q": "Jak se nazývá bájný sněžný muž z Himálaje?",
+   "a": "yetti"
+  },
+  {
+   "q": "Jak se jmenuje italský přístav, z něhož pocházel Marco Polo?",
+   "a": "Benátky"
+  },
+  {
+   "q": "Jak se souhrnně nazývá deset přikázání, která podle Bible obdržel Mojžíš?",
+   "a": "Desatero"
+  }
+ ],
+ "yesno": []
+}

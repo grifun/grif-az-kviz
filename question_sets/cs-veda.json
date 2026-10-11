@@ -1,0 +1,159 @@
+{
+ "id": "cs-veda",
+ "lang": "cs",
+ "name": {
+  "cs": "Věda a příroda",
+  "en": "Science and nature (in Czech)"
+ },
+ "description": {
+  "cs": "Vesmír, zvířata, lidské tělo, chemie a matematika.",
+  "en": "Space, animals, the human body, chemistry and maths."
+ },
+ "open": [
+  {
+   "q": "Která planeta je největší ve sluneční soustavě?",
+   "a": "Jupiter"
+  },
+  {
+   "q": "Kdo je autorem teorie relativity?",
+   "a": "Albert Einstein"
+  },
+  {
+   "q": "Který živočich je největším savcem na Zemi?",
+   "a": "plejtvák obrovský"
+  },
+  {
+   "q": "Jak se nazývá proces, při kterém rostliny pomocí světla vyrábějí cukry?",
+   "a": "fotosyntéza"
+  },
+  {
+   "q": "Jaký plyn uvolňují rostliny při fotosyntéze?",
+   "a": "kyslík"
+  },
+  {
+   "q": "Kdo si jako první nechal patentovat telefon?",
+   "a": "Alexander Graham Bell"
+  },
+  {
+   "q": "Který pták je symbolem míru?",
+   "a": "holubice"
+  },
+  {
+   "q": "Jak se nazývá mládě koně?",
+   "a": "hříbě"
+  },
+  {
+   "q": "Jak se nazývá mládě krávy?",
+   "a": "tele"
+  },
+  {
+   "q": "Který americký vynálezce je spojován s vynálezem žárovky a fonografu?",
+   "a": "Thomas Alva Edison"
+  },
+  {
+   "q": "Jak se jmenuje přirozená družice Země?",
+   "a": "Měsíc"
+  },
+  {
+   "q": "Která planeta je nejblíže Slunci?",
+   "a": "Merkur"
+  },
+  {
+   "q": "Která planeta se přezdívá Rudá planeta?",
+   "a": "Mars"
+  },
+  {
+   "q": "Které zvíře je nejrychlejším suchozemským živočichem?",
+   "a": "gepard"
+  },
+  {
+   "q": "Jak se jmenuje největší kočkovitá šelma?",
+   "a": "tygr"
+  },
+  {
+   "q": "Který orgán pumpuje krev do celého těla?",
+   "a": "srdce"
+  },
+  {
+   "q": "Jak se jmenuje nejtvrdší přírodní nerost?",
+   "a": "diamant"
+  },
+  {
+   "q": "Jak se nazývá věda o vesmíru a nebeských tělesech?",
+   "a": "astronomie"
+  },
+  {
+   "q": "Jak se nazývá věda zkoumající minulost lidstva podle hmotných pozůstatků?",
+   "a": "archeologie"
+  },
+  {
+   "q": "Jak se nazývá chorobný strach z pavouků?",
+   "a": "arachnofobie"
+  },
+  {
+   "q": "Ze které rostliny se vyrábí tequila?",
+   "a": "agáve"
+  },
+  {
+   "q": "Který brněnský mnich je považován za zakladatele genetiky?",
+   "a": "Johann Gregor Mendel"
+  },
+  {
+   "q": "Který ruský chemik sestavil periodickou soustavu prvků?",
+   "a": "Dmitrij Ivanovič Mendělejev"
+  },
+  {
+   "q": "Kdo objevil penicilin?",
+   "a": "Alexander Fleming"
+  },
+  {
+   "q": "Který orgán je největším orgánem lidského těla?",
+   "a": "kůže"
+  },
+  {
+   "q": "Jak se jmenuje nejmenší kost v lidském těle?",
+   "a": "třmínek"
+  },
+  {
+   "q": "Jak se jmenuje první písmeno řecké abecedy?",
+   "a": "alfa"
+  },
+  {
+   "q": "Který kov je při pokojové teplotě kapalný?",
+   "a": "rtuť"
+  },
+  {
+   "q": "Který mořský živočich má osm ramen s přísavkami?",
+   "a": "chobotnice"
+  },
+  {
+   "q": "Jak se nazývá umělé jezero vzniklé přehrazením řeky?",
+   "a": "přehrada"
+  },
+  {
+   "q": "Jaký strom má plody zvané žaludy?",
+   "a": "dub"
+  },
+  {
+   "q": "Jak se nazývá lékař, který se zabývá zuby?",
+   "a": "zubař"
+  },
+  {
+   "q": "Jak se nazývá rok, který má 366 dní?",
+   "a": "přestupný rok"
+  },
+  {
+   "q": "Jaké zvíře je národním symbolem Číny a jí bambus?",
+   "a": "panda velká"
+  },
+  {
+   "q": "Jak se nazývá trojúhelník, který má všechny strany stejně dlouhé?",
+   "a": "rovnostranný"
+  },
+  {
+   "q": "Jak se nazývá úhel, který měří přesně 90 stupňů?",
+   "a": "pravý úhel"
+  }
+ ],
+ "yesno": []
+}

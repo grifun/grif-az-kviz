@@ -1,0 +1,175 @@
+{
+ "id": "en-yes-no",
+ "lang": "en",
+ "name": {
+  "cs": "ANO/NE (anglicky)",
+  "en": "YES/NO – general"
+ },
+ "description": {
+  "cs": "Otázky pro černá pole – anglicky.",
+  "en": "Questions for black fields."
+ },
+ "open": [],
+ "yesno": [
+  {
+   "q": "Is Mount Everest the highest mountain in the world?",
+   "a": "yes"
+  },
+  {
+   "q": "Is a whale a fish?",
+   "a": "no"
+  },
+  {
+   "q": "Is a bat a mammal?",
+   "a": "yes"
+  },
+  {
+   "q": "Is Mars larger than Earth?",
+   "a": "no"
+  },
+  {
+   "q": "Is Sydney the capital of Australia?",
+   "a": "no"
+  },
+  {
+   "q": "Does a spider have six legs?",
+   "a": "no"
+  },
+  {
+   "q": "Does water boil at 100 °C at sea level?",
+   "a": "yes"
+  },
+  {
+   "q": "Is the Sun a star?",
+   "a": "yes"
+  },
+  {
+   "q": "Is a dolphin a mammal?",
+   "a": "yes"
+  },
+  {
+   "q": "Is Ag the chemical symbol for gold?",
+   "a": "no"
+  },
+  {
+   "q": "Do penguins live in the wild at the North Pole?",
+   "a": "no"
+  },
+  {
+   "q": "Is the Pacific the largest ocean?",
+   "a": "yes"
+  },
+  {
+   "q": "Is Venus the closest planet to the Sun?",
+   "a": "no"
+  },
+  {
+   "q": "Do the angles of a triangle add up to 180 degrees?",
+   "a": "yes"
+  },
+  {
+   "q": "Is 1 a prime number?",
+   "a": "no"
+  },
+  {
+   "q": "Is Norway a member of the European Union?",
+   "a": "no"
+  },
+  {
+   "q": "Is the giraffe the tallest living land animal?",
+   "a": "yes"
+  },
+  {
+   "q": "Did William Shakespeare write Hamlet?",
+   "a": "yes"
+  },
+  {
+   "q": "Did Pablo Picasso paint the Mona Lisa?",
+   "a": "no"
+  },
+  {
+   "q": "Is diamond made of carbon?",
+   "a": "yes"
+  },
+  {
+   "q": "Is Greenland the largest island in the world?",
+   "a": "yes"
+  },
+  {
+   "q": "Is the Moon a planet?",
+   "a": "no"
+  },
+  {
+   "q": "Is Canada larger in area than the United States?",
+   "a": "yes"
+  },
+  {
+   "q": "Does an adult human usually have 206 bones?",
+   "a": "yes"
+  },
+  {
+   "q": "Is Istanbul the capital of Turkey?",
+   "a": "no"
+  },
+  {
+   "q": "Does the Amazon flow through South America?",
+   "a": "yes"
+  },
+  {
+   "q": "Is a tomato a fruit in botanical terms?",
+   "a": "yes"
+  },
+  {
+   "q": "Can an ostrich fly?",
+   "a": "no"
+  },
+  {
+   "q": "Does a chessboard have 64 squares?",
+   "a": "yes"
+  },
+  {
+   "q": "Can you see the Great Wall of China from the Moon with the naked eye?",
+   "a": "no"
+  },
+  {
+   "q": "Is Prague the capital of the Czech Republic?",
+   "a": "yes"
+  },
+  {
+   "q": "Is Mercury the hottest planet in the Solar System?",
+   "a": "no"
+  },
+  {
+   "q": "Did the Titanic sink in 1912?",
+   "a": "yes"
+  },
+  {
+   "q": "Does sound travel faster than light?",
+   "a": "no"
+  },
+  {
+   "q": "Is the koala a bear?",
+   "a": "no"
+  },
+  {
+   "q": "Do humans have two lungs?",
+   "a": "yes"
+  },
+  {
+   "q": "Was Albert Einstein born in Germany?",
+   "a": "yes"
+  },
+  {
+   "q": "Do bees make honey?",
+   "a": "yes"
+  },
+  {
+   "q": "Is the Danube longer than the Vltava?",
+   "a": "yes"
+  },
+  {
+   "q": "Is Tokyo the capital of Japan?",
+   "a": "yes"
+  }
+ ]
+}

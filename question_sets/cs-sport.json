@@ -1,0 +1,83 @@
+{
+ "id": "cs-sport",
+ "lang": "cs",
+ "name": {
+  "cs": "Sport a jídlo",
+  "en": "Sport and food (in Czech)"
+ },
+ "description": {
+  "cs": "Olympionici, hry a česká i světová kuchyně.",
+  "en": "Olympians, games and Czech and world cuisine."
+ },
+ "open": [
+  {
+   "q": "Ve kterém sportu proslul Jaromír Jágr?",
+   "a": "lední hokej"
+  },
+  {
+   "q": "Která Češka získala na olympiádě 2018 zlato v lyžování i ve snowboardingu?",
+   "a": "Ester Ledecká"
+  },
+  {
+   "q": "Která česká rychlobruslařka je trojnásobnou olympijskou vítězkou?",
+   "a": "Martina Sáblíková"
+  },
+  {
+   "q": "Kterému československému běžci se přezdívalo Česká lokomotiva?",
+   "a": "Emil Zátopek"
+  },
+  {
+   "q": "Jak se nazývá francouzská pečená pochoutka ve tvaru půlměsíce?",
+   "a": "croissant"
+  },
+  {
+   "q": "Jak se jmenuje italská placka s rajčaty a sýrem?",
+   "a": "pizza"
+  },
+  {
+   "q": "Ve kterém městě se roku 1896 konaly první novodobé olympijské hry?",
+   "a": "Atény"
+  },
+  {
+   "q": "Jak se nazývá gumový kotouč, se kterým se hraje lední hokej?",
+   "a": "puk"
+  },
+  {
+   "q": "Jak se jmenuje česká tenistka, vítězka Wimbledonu v letech 2011 a 2014?",
+   "a": "Petra Kvitová"
+  },
+  {
+   "q": "Jak se jmenuje český oštěpař, trojnásobný olympijský vítěz a držitel světového rekordu?",
+   "a": "Jan Železný"
+  },
+  {
+   "q": "Jak se jmenuje slavný překážkový dostih, který se běží v Pardubicích?",
+   "a": "Velká pardubická"
+  },
+  {
+   "q": "Ve kterém japonském městě vyhráli čeští hokejisté roku 1998 olympijské zlato?",
+   "a": "Nagano"
+  },
+  {
+   "q": "Jak se nazývá šachový tah, při kterém se současně přesune král a věž?",
+   "a": "rošáda"
+  },
+  {
+   "q": "Kolik bodů má v basketbalu koš vstřelený zpoza čáry tříbodového území?",
+   "a": "tři"
+  },
+  {
+   "q": "Jak se jmenuje italský pokrm z dušené rýže?",
+   "a": "risotto"
+  },
+  {
+   "q": "Jak se jmenuje tradiční české vánoční pečivo spletené z pramenů těsta?",
+   "a": "vánočka"
+  },
+  {
+   "q": "Jaká ryba se v Česku tradičně jí na Štědrý den?",
+   "a": "kapr"
+  }
+ ],
+ "yesno": []
+}

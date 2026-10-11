@@ -1,0 +1,183 @@
+{
+ "id": "cs-svet",
+ "lang": "cs",
+ "name": {
+  "cs": "Zeměpis světa",
+  "en": "World geography (in Czech)"
+ },
+ "description": {
+  "cs": "Hlavní města, hory, řeky a kontinenty.",
+  "en": "Capitals, mountains, rivers and continents."
+ },
+ "open": [
+  {
+   "q": "Které město je hlavním městem Austrálie?",
+   "a": "Canberra"
+  },
+  {
+   "q": "Které město je hlavním městem Kanady?",
+   "a": "Ottawa"
+  },
+  {
+   "q": "Která řeka protéká egyptskou Káhirou?",
+   "a": "Nil"
+  },
+  {
+   "q": "Které město je hlavním městem Slovenska?",
+   "a": "Bratislava"
+  },
+  {
+   "q": "Ve kterém městě stojí Eiffelova věž?",
+   "a": "Paříž"
+  },
+  {
+   "q": "Jak se jmenuje nejvyšší hora světa?",
+   "a": "Mount Everest"
+  },
+  {
+   "q": "Jak se jmenuje největší oceán na Zemi?",
+   "a": "Tichý oceán"
+  },
+  {
+   "q": "Které město je hlavním městem Japonska?",
+   "a": "Tokio"
+  },
+  {
+   "q": "Jak se jmenuje největší horká poušť na světě?",
+   "a": "Sahara"
+  },
+  {
+   "q": "Ve kterém státě leží inkské město Machu Picchu?",
+   "a": "Peru"
+  },
+  {
+   "q": "Které město je hlavním městem Itálie?",
+   "a": "Řím"
+  },
+  {
+   "q": "Jak se jmenuje japonská měna?",
+   "a": "jen"
+  },
+  {
+   "q": "Které město je hlavním městem Egypta?",
+   "a": "Káhira"
+  },
+  {
+   "q": "Jak se jmenuje nejvyšší hora Afriky?",
+   "a": "Kilimandžáro"
+  },
+  {
+   "q": "Jak se jmenuje nejvyšší hora Slovenska?",
+   "a": "Gerlachovský štít"
+  },
+  {
+   "q": "Která řeka je nejdelší v Evropě?",
+   "a": "Volha"
+  },
+  {
+   "q": "Které město je hlavním městem Polska?",
+   "a": "Varšava"
+  },
+  {
+   "q": "Které město je hlavním městem Maďarska?",
+   "a": "Budapešť"
+  },
+  {
+   "q": "Které město je hlavním městem Rakouska?",
+   "a": "Vídeň"
+  },
+  {
+   "q": "Které město je hlavním městem Portugalska?",
+   "a": "Lisabon"
+  },
+  {
+   "q": "Které město je hlavním městem Norska?",
+   "a": "Oslo"
+  },
+  {
+   "q": "Které město je hlavním městem Finska?",
+   "a": "Helsinky"
+  },
+  {
+   "q": "Na kterém kontinentu leží Egypt?",
+   "a": "Afrika"
+  },
+  {
+   "q": "Který kontinent je nejmenší?",
+   "a": "Austrálie"
+  },
+  {
+   "q": "Na kterém kontinentu leží jižní pól?",
+   "a": "Antarktida"
+  },
+  {
+   "q": "Jak se jmenuje nejvyšší vodopád světa ve Venezuele?",
+   "a": "Salto Ángel"
+  },
+  {
+   "q": "Které město je hlavním městem USA?",
+   "a": "Washington"
+  },
+  {
+   "q": "Ve kterém městě stojí Socha svobody?",
+   "a": "New York"
+  },
+  {
+   "q": "Která země je od roku 2023 nejlidnatější na světě?",
+   "a": "Indie"
+  },
+  {
+   "q": "Který ostrovní stát má hlavní město Reykjavík?",
+   "a": "Island"
+  },
+  {
+   "q": "Kterému státu patří ostrov Kréta?",
+   "a": "Řecko"
+  },
+  {
+   "q": "Jak se jmenuje největší ostrov světa?",
+   "a": "Grónsko"
+  },
+  {
+   "q": "Jak se jmenuje hlavní město Švédska?",
+   "a": "Stockholm"
+  },
+  {
+   "q": "Ve kterém městě sídlí Evropský parlament (oficiální sídlo)?",
+   "a": "Štrasburk"
+  },
+  {
+   "q": "Jak se jmenuje největší jezero v Africe?",
+   "a": "Viktoriino jezero"
+  },
+  {
+   "q": "Ve kterém americkém národním parku se nachází gejzír Old Faithful?",
+   "a": "Yellowstone"
+  },
+  {
+   "q": "Jak se jmenuje hlavní město Irska?",
+   "a": "Dublin"
+  },
+  {
+   "q": "Jak se jmenuje hlavní město Chorvatska?",
+   "a": "Záhřeb"
+  },
+  {
+   "q": "Jak se jmenuje hlavní město Švýcarska?",
+   "a": "Bern"
+  },
+  {
+   "q": "Jak se jmenuje hlavní město Chile?",
+   "a": "Santiago de Chile"
+  },
+  {
+   "q": "Jak se jmenuje hlavní město Ukrajiny?",
+   "a": "Kyjev"
+  },
+  {
+   "q": "Jak se nazývá nejjižnější výběžek Afriky?",
+   "a": "Střelkový mys"
+  }
+ ],
+ "yesno": []
+}

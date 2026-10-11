@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AZ-kvíz – sady otázek</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><polygon points='50,4 93,27 93,73 50,96 7,73 7,27' fill='%232f8cff'/></svg>">
+<link rel="stylesheet" href="/static/css/style.css">
+<style>
+  .top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 14px 16px; max-width: 1400px; margin: 0 auto; }
+  .top .title { font-weight: 800; font-size: 1.25rem; margin-right: auto; }
+  .top .title span { color: var(--p1); }
+  .top .folder { color: var(--muted); font-size: .8rem; font-family: ui-monospace, monospace; word-break: break-all; }
+  .wrap { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; padding: 0 16px 96px; max-width: 1400px; margin: 0 auto; }
+  @media (max-width: 860px) { .wrap { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 14px; }
+  .card h3 { margin: 0 0 10px; font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+  .card h3 .count { color: var(--text); }
+  .banner { border-radius: 10px; padding: 10px 12px; margin: 0 auto 14px; max-width: 1368px; font-weight: 600; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .banner.info { background: var(--panel-2); }
+  .banner.err { background: rgba(255, 90, 90, .15); border: 1px solid var(--bad); font-weight: 500; display: block; }
+  .banner.err ul { margin: 6px 0 0; padding-left: 1.2em; }
+  .banner input { width: 220px; }
+  .side { position: sticky; top: 12px; align-self: start; max-height: calc(100vh - 24px); overflow: auto; }
+  @media (max-width: 860px) { .side { position: static; max-height: none; } }
+  .setitem { display: block; width: 100%; text-align: left; border: 2px solid transparent; background: var(--bg); color: var(--text);
+    border-radius: 10px; padding: 8px 10px; margin-bottom: 6px; cursor: pointer; }
+  .setitem:hover { border-color: var(--line); }
+  .setitem.on { border-color: var(--accent); }
+  .setitem b { display: block; }
+  .setitem small { color: var(--muted); }
+  .form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 560px) { .form { grid-template-columns: 1fr; } }
+  .form label > span { display: block; font-size: .8rem; color: var(--muted); margin-bottom: 3px; }
+  .qrow { display: grid; grid-template-columns: 2.2em minmax(0, 3fr) minmax(0, 1.6fr) minmax(0, .9fr) auto; gap: 6px; align-items: start; margin-bottom: 6px; }
+  .qrow.yn { grid-template-columns: 2.2em minmax(0, 1fr) 7em auto; }
+  .qrow .n { color: var(--muted); font-size: .8rem; padding-top: .7em; text-align: right; }
+  .qrow textarea { min-height: 2.4em; height: 2.4em; resize: vertical; font-family: inherit; font-size: inherit; }
+  .qrow.bad textarea, .qrow.bad input { border-color: var(--bad); }
+  @media (max-width: 700px) {
+    .qrow { grid-template-columns: 2em 1fr auto; }
+    .qrow .a, .qrow .h { grid-column: 2; }
+    .qrow.yn { grid-template-columns: 2em 1fr auto; }
+    .qrow.yn select { grid-column: 2; }
+  }
+  .del { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 8px; width: 2.4em; height: 2.4em; cursor: pointer; }
+  .del:hover { color: var(--bad); border-color: var(--bad); }
+  .tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+  .tools input { max-width: 260px; }
+  .footer { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(10, 22, 51, .96); border-top: 1px solid var(--line);
+    padding: 10px 16px; z-index: 5; }
+  .footer .in { max-width: 1400px; margin: 0 auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .footer .state { margin-right: auto; color: var(--muted); font-weight: 600; }
+  .footer .state.dirty { color: var(--accent); }
+  .empty { color: var(--muted); text-align: center; padding: 48px 16px; }
+  fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+  fieldset:disabled .del, fieldset:disabled .btn { opacity: .4; cursor: not-allowed; }
+  .ok-msg { color: var(--ok); }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="title">AZ-kvíz · <span data-i18n="editor_title"></span></div>
+  <span class="folder"><span data-i18n="folder"></span> <span id="folder"></span></span>
+  <button class="btn small" id="reload" data-i18n="reload_disk"></button>
+  <div class="langswitch" id="langswitch"><button data-lang="cs">CS</button><button data-lang="en">EN</button></div>
+  <a class="btn small" href="/" data-i18n="back_home"></a>
+</div>
+<div class="banner info" id="access" hidden></div>
+<div class="banner err" id="fileErrors" hidden></div>
+
+<div class="wrap">
+  <aside class="side">
+    <div class="card">
+      <button class="btn accent" id="newSet" style="width:100%;margin-bottom:12px" data-i18n="new_set"></button>
+      <div id="list"></div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="card empty" id="empty" data-i18n="empty_editor"></div>
+    <fieldset id="editor" hidden>
+      <div class="banner info" id="staleBanner" hidden style="margin:0 0 14px"><span data-i18n="changed_on_disk"></span>
+        <button class="btn small" type="button" id="staleReload" data-i18n="reload_set"></button></div>
+      <section class="card">
+        <h3 data-i18n="basics"></h3>
+        <div class="form">
+          <label><span data-i18n="set_id"></span><input type="text" id="fId" maxlength="40" pattern="[a-z0-9][a-z0-9_-]*"></label>
+          <label><span data-i18n="set_lang"></span>
+            <select id="fLang"><option value="cs" data-i18n="lang_cs"></option><option value="en" data-i18n="lang_en"></option></select></label>
+          <label><span data-i18n="name_cs"></span><input type="text" id="fNameCs" maxlength="80"></label>
+          <label><span data-i18n="name_en"></span><input type="text" id="fNameEn" maxlength="80"></label>
+          <label><span data-i18n="desc_cs"></span><input type="text" id="fDescCs" maxlength="200"></label>
+          <label><span data-i18n="desc_en"></span><input type="text" id="fDescEn" maxlength="200"></label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h3><span data-i18n="open_questions"></span> <span class="count" id="openCount"></span></h3>
+        <div class="tools">
+          <input type="search" id="search" data-i18n-ph="search">
+          <button class="btn small" type="button" id="addOpen" data-i18n="add_question"></button>
+        </div>
+        <div id="openRows"></div>
+      </section>
+
+      <section class="card">
+        <h3><span data-i18n="yesno_questions"></span> <span class="count" id="ynCount"></span></h3>
+        <div class="tools"><button class="btn small" type="button" id="addYn" data-i18n="add_question"></button></div>
+        <div id="ynRows"></div>
+      </section>
+
+      <section class="card">
+        <h3 data-i18n="bulk"></h3>
+        <textarea id="bulk" placeholder="Hlavní město Francie? | Paříž&#10;Kdo napsal Máj? | Karel Hynek Mácha | KHM&#10;Je Slunce hvězda? | ANO"></textarea>
+        <p class="help" style="color:var(--muted);font-size:.85rem" data-i18n="custom_help"></p>
+        <button class="btn small" type="button" id="bulkAdd" data-i18n="bulk_add"></button> <span class="ok-msg" id="bulkMsg"></span>
+      </section>
+    </fieldset>
+  </main>
+</div>
+
+<div class="footer" id="footer" hidden>
+  <div class="in">
+    <span class="state" id="saveState"></span>
+    <button class="btn small" id="download" data-i18n="download_json"></button>
+    <button class="btn small bad" id="delete" data-i18n="delete_set"></button>
+    <button class="btn small" id="discard" data-i18n="discard"></button>
+    <button class="btn accent" id="save" data-i18n="save"></button>
+  </div>
+</div>
+
+<script src="/static/js/i18n.js"></script>
+<script src="/static/js/common.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  let sets = [], status = { can_edit: false }, cur = null, dirty = false;
+  // cur = { id, version, isNew, data: {lang, name:{cs,en}, description:{cs,en}, open:[{q,a,h}], yesno:[{q,a}]} }
+
+  // ---- language ----
+  function storedLang() {
+    try { const l = localStorage.getItem("azkviz-lang"); if (l) return l; } catch (_) {}
+    return (navigator.language || "").toLowerCase().startsWith("cs") ? "cs" : "en";
+  }
+  function setLang(l) {
+    I18N.set(l); I18N.apply();
+    try { localStorage.setItem("azkviz-lang", l); } catch (_) {}
+    document.querySelectorAll("#langswitch button").forEach((b) => b.classList.toggle("on", b.dataset.lang === l));
+    renderList(); renderAccess(); if (cur) renderRows(); renderState();
+  }
+  document.querySelectorAll("#langswitch button").forEach((b) => (b.onclick = () => setLang(b.dataset.lang)));
+
+  // ---- server calls ----
+  function password() { try { return sessionStorage.getItem("azkviz-edit-pw") || ""; } catch (_) { return ""; } }
+  async function api(method, url, body) {
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json", "X-Lang": I18N.lang, "X-Edit-Password": password() },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { const e = new Error(data.detail || res.statusText); e.status = res.status; throw e; }
+    return data;
+  }
+
+  async function loadStatus() {
+    status = await api("GET", "/api/editor");
+    $("folder").textContent = status.dir;
+    if (accessKey !== `${status.can_edit}/${status.needs_password}`) renderAccess();
+    const box = $("fileErrors");
+    box.hidden = !status.errors.length;
+    box.innerHTML = "";
+    if (status.errors.length) {
+      box.append(I18N.t("bad_files"));
+      const ul = document.createElement("ul");
+      for (const e of status.errors) {
+        const li = document.createElement("li");
+        li.textContent = `${e.file}: ${e.message[I18N.lang] || e.message.cs}`;
+        ul.appendChild(li);
+      }
+      box.appendChild(ul);
+    }
+  }
+
+  async function loadList() {
+    sets = await api("GET", "/api/sets");
+    renderList();
+  }
+
+  // ---- access / read-only ----
+  let accessKey = null;   // redraw the banner only when access changes (keeps a half-typed password)
+  function renderAccess() {
+    accessKey = `${status.can_edit}/${status.needs_password}`;
+    const box = $("access");
+    box.innerHTML = "";
+    box.hidden = status.can_edit;
+    $("editor").disabled = !status.can_edit;
+    $("newSet").disabled = !status.can_edit;
+    ["save", "delete", "discard"].forEach((id) => ($(id).hidden = !status.can_edit));
+    if (status.can_edit) return;
+    if (!status.needs_password) { box.textContent = I18N.t("read_only_local"); return; }
+    const inp = document.createElement("input");
+    inp.type = "password";
+    const btn = document.createElement("button");
+    btn.className = "btn small accent";
+    btn.textContent = I18N.t("unlock");
+    btn.onclick = async () => {
+      try { sessionStorage.setItem("azkviz-edit-pw", inp.value); } catch (_) {}
+      await loadStatus();
+      if (!status.can_edit) AZ.toast(I18N.t("wrong_password"));
+    };
+    inp.onkeydown = (e) => e.key === "Enter" && btn.click();
+    box.append(I18N.t("read_only_pw"), inp, btn);
+  }
+
+  // ---- list of sets ----
+  function renderList() {
+    const box = $("list");
+    box.innerHTML = "";
+    if (!sets.length) { box.innerHTML = `<p style="color:var(--muted)"></p>`; box.firstChild.textContent = I18N.t("no_sets"); }
+    const langs = [I18N.lang, ...I18N.LANGS.filter((l) => l !== I18N.lang)];
+    for (const lang of langs) {
+      const mine = sets.filter((s) => s.lang === lang);
+      if (!mine.length) continue;
+      const h = document.createElement("div");
+      h.className = "setgroup";
+      h.textContent = I18N.t("lang_" + lang);
+      box.appendChild(h);
+      for (const s of mine) {
+        const b = document.createElement("button");
+        b.className = "setitem" + (cur && cur.id === s.id ? " on" : "");
+        b.innerHTML = "<b></b><small></small>";
+        b.querySelector("b").textContent = s.name[I18N.lang] || s.name.cs;
+        const parts = [];
+        if (s.open) parts.push(I18N.t("n_open", { n: s.open }));
+        if (s.yesno) parts.push(I18N.t("n_yesno", { n: s.yesno }));
+        b.querySelector("small").textContent = `${s.id} · ` + (parts.join(" · ") || "0");
+        b.onclick = () => openSet(s.id);
+        box.appendChild(b);
+      }
+    }
+  }
+
+  // ---- editor ----
+  function confirmLeave() { return !dirty || confirm(I18N.t("confirm_leave")); }
+
+  async function openSet(id, force) {
+    if (!force && !confirmLeave()) return;
+    try {
+      const s = await api("GET", `/api/sets/${encodeURIComponent(id)}`);
+      cur = { id: s.id, version: s.version, file: s.file, isNew: false,
+        data: { lang: s.lang, name: s.name, description: s.description,
+          open: s.open.map((q) => ({ q: q.q, a: q.a, h: q.h || "" })), yesno: s.yesno.map((q) => ({ q: q.q, a: q.a })) } };
+      try { history.replaceState(null, "", `/sets#${encodeURIComponent(id)}`); } catch (_) {}
+      showEditor();
+    } catch (e) { AZ.toast(e.message); }
+  }
+
+  function newSet() {
+    if (!confirmLeave()) return;
+    let n = 1, id;
+    do { id = `${I18N.lang}-nova-sada-${n++}`.replace("en-nova-sada", "en-new-set"); } while (sets.some((s) => s.id === id));
+    const name = I18N.t("new_set_name");
+    cur = { id, version: null, isNew: true,
+      data: { lang: I18N.lang, name: { cs: name, en: name }, description: { cs: "", en: "" }, open: [{ q: "", a: "", h: "" }], yesno: [] } };
+    showEditor();
+    setDirty(true);
+    $("fId").focus();
+    $("fId").select();
+  }
+
+  function showEditor() {
+    $("empty").hidden = true;
+    $("editor").hidden = false;
+    $("footer").hidden = false;
+    $("staleBanner").hidden = true;
+    $("fId").value = cur.id;
+    $("fId").disabled = !cur.isNew;
+    $("fId").title = cur.file || "";
+    $("fLang").value = cur.data.lang;
+    $("fNameCs").value = cur.data.name.cs; $("fNameEn").value = cur.data.name.en;
+    $("fDescCs").value = cur.data.description.cs; $("fDescEn").value = cur.data.description.en;
+    $("search").value = "";
+    $("delete").hidden = cur.isNew || !status.can_edit;
+    setDirty(false);
+    renderRows();
+    renderList();
+  }
+
+  // Answer initials, as the server computes them (Czech treats "ch" as one letter).
+  function initials(answer, lang) {
+    const out = answer.split(/\s+/).map((w) => w.replace(/^[("'„“‚]+/, "")).filter(Boolean)
+      .map((w) => (lang === "cs" && w.slice(0, 2).toLowerCase() === "ch" ? w.slice(0, 2) : w[0]));
+    if (!out.length) return "";
+    out[0] = out[0][0].toUpperCase() + out[0].slice(1);
+    return out.join("");
+  }
+
+  function field(tag, cls, value, ph, oninput) {
+    const e = document.createElement(tag);
+    if (tag === "input") e.type = "text";
+    e.className = cls;
+    e.value = value;
+    if (ph) e.placeholder = ph;
+    e.oninput = oninput;
+    return e;
+  }
+
+  function delButton(onclick) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "del"; b.textContent = "✕"; b.title = I18N.t("remove");
+    b.onclick = onclick;
+    return b;
+  }
+
+  function renderRows() {
+    if (!cur) return;
+    const term = $("search").value.trim().toLowerCase();
+    const match = (q) => !term || (q.q + " " + q.a).toLowerCase().includes(term);
+    const box = $("openRows");
+    box.innerHTML = "";
+    cur.data.open.forEach((q, i) => {
+      if (!match(q)) return;
+      const row = document.createElement("div");
+      row.className = "qrow" + (rowBad(q) ? " bad" : "");
+      const n = document.createElement("span"); n.className = "n"; n.textContent = i + 1;
+      const hint = field("input", "h", q.h, "", (e) => { q.h = e.target.value; setDirty(true); });
+      hint.title = I18N.t("hint");
+      const setHintPh = () => (hint.placeholder = I18N.t("hint_auto", { h: initials(q.a, cur.data.lang) || "—" }));
+      setHintPh();
+      const qq = field("textarea", "q", q.q, I18N.t("question"), (e) => { q.q = e.target.value; setDirty(true); markRow(row, q); });
+      const aa = field("input", "a", q.a, I18N.t("answer"), (e) => { q.a = e.target.value; setHintPh(); setDirty(true); markRow(row, q); });
+      row.append(n, qq, aa, hint, delButton(() => { cur.data.open.splice(i, 1); setDirty(true); renderRows(); }));
+      box.appendChild(row);
+    });
+    const yb = $("ynRows");
+    yb.innerHTML = "";
+    cur.data.yesno.forEach((q, i) => {
+      if (!match({ q: q.q, a: "" })) return;
+      const row = document.createElement("div");
+      row.className = "qrow yn";
+      const n = document.createElement("span"); n.className = "n"; n.textContent = i + 1;
+      const qq = field("textarea", "q", q.q, I18N.t("question"), (e) => { q.q = e.target.value; setDirty(true); });
+      const sel = document.createElement("select");
+      for (const v of ["yes", "no"]) { const o = document.createElement("option"); o.value = v; o.textContent = I18N.t(v); sel.appendChild(o); }
+      sel.value = q.a;
+      sel.onchange = () => { q.a = sel.value; setDirty(true); };
+      row.append(n, qq, sel, delButton(() => { cur.data.yesno.splice(i, 1); setDirty(true); renderRows(); }));
+      yb.appendChild(row);
+    });
+    $("openCount").textContent = `(${cur.data.open.length})`;
+    $("ynCount").textContent = `(${cur.data.yesno.length})`;
+  }
+  const rowBad = (q) => (q.q.trim() || q.a.trim()) && !(q.q.trim() && q.a.trim());
+  const markRow = (row, q) => row.classList.toggle("bad", !!rowBad(q));
+
+  function setDirty(on) {
+    dirty = on;
+    renderState();
+  }
+  function renderState(msg) {
+    const st = $("saveState");
+    st.className = "state" + (dirty ? " dirty" : "");
+    st.textContent = msg || (dirty ? I18N.t("unsaved") : cur ? I18N.t("all_saved") : "");
+    $("save").disabled = !dirty;
+    $("discard").disabled = !dirty || (cur && cur.isNew);
+  }
+
+  function collect() {
+    const d = cur.data;
+    d.lang = $("fLang").value;
+    d.name = { cs: $("fNameCs").value, en: $("fNameEn").value };
+    d.description = { cs: $("fDescCs").value, en: $("fDescEn").value };
+    return d;
+  }
+
+  async function save() {
+    const id = cur.isNew ? $("fId").value.trim() : cur.id;
+    try {
+      const s = await api("PUT", `/api/sets/${encodeURIComponent(id)}`, { set: collect(), version: cur.version });
+      dirty = false;
+      await loadList();
+      await openSet(s.id, true);
+      renderState(I18N.t("saved_to", { file: s.file }));
+    } catch (e) {
+      AZ.toast(e.message);
+      if (e.status === 409 && !cur.isNew) $("staleBanner").hidden = false;
+    }
+  }
+
+  async function del() {
+    if (!confirm(I18N.t("confirm_delete", { name: cur.data.name[I18N.lang] || cur.data.name.cs }))) return;
+    try {
+      await api("DELETE", `/api/sets/${encodeURIComponent(cur.id)}?version=${encodeURIComponent(cur.version)}`);
+      cur = null; dirty = false;
+      $("editor").hidden = true; $("footer").hidden = true; $("empty").hidden = false;
+      try { history.replaceState(null, "", "/sets"); } catch (_) {}
+      await loadList();
+      AZ.toast(I18N.t("deleted"));
+    } catch (e) {
+      AZ.toast(e.message);
+      if (e.status === 409) $("staleBanner").hidden = false;
+    }
+  }
+
+  function bulkAdd() {
+    const add = { open: 0, yesno: 0 };
+    for (const raw of $("bulk").value.split("\n")) {
+      const line = raw.trim();
+      if (!line || line.startsWith("#")) continue;
+      const [q, a, h] = line.split("|").map((x) => x.trim());
+      if (!q || !a) continue;
+      const yn = { ano: "yes", a: "yes", yes: "yes", y: "yes", ne: "no", n: "no", no: "no" }[a.toLowerCase()];
+      if (yn) { cur.data.yesno.push({ q, a: yn }); add.yesno++; }
+      else { cur.data.open.push({ q, a, h: h || "" }); add.open++; }
+    }
+    // drop the empty starter row of a new set once real questions arrive
+    cur.data.open = cur.data.open.filter((q, i, arr) => q.q || q.a || q.h || arr.length === 1);
+    $("bulk").value = "";
+    $("bulkMsg").textContent = I18N.t("bulk_added", add);
+    setTimeout(() => ($("bulkMsg").textContent = ""), 4000);
+    if (add.open || add.yesno) setDirty(true);
+    renderRows();
+  }
+
+  function download() {
+    const a = document.createElement("a");
+    const body = { id: cur.isNew ? $("fId").value.trim() : cur.id, ...collect() };
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(body, null, 1)], { type: "application/json" }));
+    a.download = `${body.id}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  // ---- wiring ----
+  ["fLang", "fNameCs", "fNameEn", "fDescCs", "fDescEn", "fId"].forEach((id) => ($(id).oninput = () => setDirty(true)));
+  $("fLang").onchange = () => { setDirty(true); renderRows(); };
+  $("search").oninput = renderRows;
+  $("addOpen").onclick = () => { cur.data.open.push({ q: "", a: "", h: "" }); $("search").value = ""; setDirty(true); renderRows();
+    const rows = $("openRows").querySelectorAll("textarea"); rows[rows.length - 1].focus(); };
+  $("addYn").onclick = () => { cur.data.yesno.push({ q: "", a: "yes" }); setDirty(true); renderRows();
+    const rows = $("ynRows").querySelectorAll("textarea"); rows[rows.length - 1].focus(); };
+  $("bulkAdd").onclick = bulkAdd;
+  $("save").onclick = save;
+  $("discard").onclick = () => cur && !cur.isNew && confirmLeave() && openSet(cur.id, true);
+  $("delete").onclick = del;
+  $("download").onclick = download;
+  $("newSet").onclick = newSet;
+  $("staleReload").onclick = () => openSet(cur.id, true);
+  $("reload").onclick = async () => { await api("POST", "/api/sets/reload"); await loadStatus(); await loadList(); };
+  addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+  addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); if (dirty && status.can_edit) save(); }
+  });
+
+  // Keep the list (and an unmodified open set) in sync with the folder, which may be edited by hand.
+  setInterval(async () => {
+    try {
+      await loadList();
+      await loadStatus();
+      if (!cur || cur.isNew) return;
+      const s = sets.find((x) => x.id === cur.id);
+      if (!s) { $("staleBanner").hidden = false; return; }
+      const fresh = await api("GET", `/api/sets/${encodeURIComponent(cur.id)}`);
+      if (fresh.version !== cur.version) {
+        if (dirty) $("staleBanner").hidden = false;
+        else openSet(cur.id, true);
+      }
+    } catch (_) { /* server unreachable – try again later */ }
+  }, 5000);
+
+  (async () => {
+    setLang(storedLang());
+    try { await loadStatus(); await loadList(); } catch (e) { AZ.toast(e.message); }
+    const want = decodeURIComponent(location.hash.slice(1));
+    if (want && sets.some((s) => s.id === want)) openSet(want, true);
+  })();
+</script>
+</body>
+</html>

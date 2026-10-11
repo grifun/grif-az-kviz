@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AZ-kvíz</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><polygon points='50,4 93,27 93,73 50,96 7,73 7,27' fill='%23ffd34d'/></svg>">
+<link rel="stylesheet" href="/static/css/style.css">
+<style>
+  .wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, 520px); gap: 16px; padding: 16px; max-width: 1500px; margin: 0 auto; }
+  @media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } }
+  .left { position: sticky; top: 16px; align-self: start; }
+  @media (max-width: 900px) { .left { position: static; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 14px; }
+  .card h3 { margin: 0 0 10px; font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+  .card h4 { margin: 16px 0 6px; font-size: .9rem; }
+  .topbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .topbar .title { font-weight: 800; font-size: 1.2rem; margin-right: auto; }
+  .topbar .title span { color: var(--accent); }
+  .scores { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .score { border-radius: 12px; padding: 10px 12px; background: var(--panel); border: 3px solid transparent; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .score .n { font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .score .c { font-weight: 900; font-size: 1.6rem; }
+  .score.p0 .c { color: var(--p0); } .score.p1 .c { color: var(--p1); }
+  .score.p0.on { border-color: var(--p0); } .score.p1.on { border-color: var(--p1); }
+  .boardbox { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; }
+  .boardbox svg { max-height: 62vh; }
+  .boardbox.editing { outline: 3px dashed var(--accent); outline-offset: -3px; }
+  .status { font-size: 1.15rem; font-weight: 700; margin-bottom: 10px; }
+  .status .who0 { color: var(--p0); } .status .who1 { color: var(--p1); }
+  .qcard { background: var(--bg); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
+  .qmeta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .qq { font-size: 1.15rem; line-height: 1.35; margin-bottom: 8px; }
+  .qa { font-size: 1.5rem; font-weight: 800; color: var(--accent); }
+  .qa small { font-size: .8rem; color: var(--muted); font-weight: 600; display: block; text-transform: uppercase; letter-spacing: .08em; }
+  .note { color: var(--accent); font-size: .9rem; margin-top: 6px; }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .actions .wide { grid-column: span 2; }
+  .actions .btn { padding: .85em .8em; font-size: 1rem; }
+  .btnrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .timer { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .timer .timerbar { flex: 1 1 120px; }
+  .timer #tlabel { font-variant-numeric: tabular-nums; font-weight: 800; min-width: 3em; }
+  details > summary { cursor: pointer; font-weight: 700; list-style: none; }
+  details > summary::before { content: "▸ "; color: var(--muted); }
+  details[open] > summary::before { content: "▾ "; }
+  details > summary h3 { display: inline; }
+  .help { color: var(--muted); font-size: .85rem; line-height: 1.45; }
+  .linkrow { display: flex; gap: 6px; margin-bottom: 8px; }
+  .linkrow input { font-size: .8rem; }
+  .banner { background: var(--accent); color: #2a2000; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; font-weight: 600; }
+  .banner .btn { margin-left: 8px; }
+  label.chk { display: flex; gap: .5em; align-items: center; margin-bottom: 6px; }
+  label.chk input { width: auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="left">
+    <div class="topbar">
+      <div class="title">AZ-kvíz <span>· <span data-i18n="referee"></span></span></div>
+      <div class="langswitch" id="langswitch" data-i18n-title="language"><button data-lang="cs">CS</button><button data-lang="en">EN</button></div>
+      <button class="btn small accent" id="openBoard" data-i18n="open_board"></button>
+    </div>
+    <div class="banner" id="popupBanner" hidden><span data-i18n="popup_blocked"></span> <button class="btn small" id="openBoard2" data-i18n="open_now"></button></div>
+    <div class="scores">
+      <div class="score p0" id="sc0"><span class="n"></span><span class="c">0</span></div>
+      <div class="score p1" id="sc1"><span class="n"></span><span class="c">0</span></div>
+    </div>
+    <div class="boardbox" id="boardbox"><svg id="board"></svg></div>
+    <p class="help" id="boardHelp"></p>
+  </div>
+
+  <div class="right">
+    <section class="card">
+      <div class="status" id="status"></div>
+      <div class="qcard" id="qcard" hidden>
+        <div class="qmeta" id="qmeta"></div>
+        <div class="qq" id="qq"></div>
+        <div class="qa" id="qa"></div>
+        <div class="note" id="qnote" hidden></div>
+      </div>
+      <div class="actions" id="actions"></div>
+      <div class="timer">
+        <div class="timerbar" id="tbar" hidden><div></div></div><span id="tlabel"></span>
+      </div>
+      <details id="customBox" style="margin-top:12px">
+        <summary><h3 data-i18n="custom_q"></h3></summary>
+        <div style="margin-top:8px">
+          <input type="text" id="cq" data-i18n-ph="custom_q_ph" style="margin-bottom:6px">
+          <div class="grid2">
+            <input type="text" id="ca" data-i18n-ph="custom_a_ph">
+            <input type="text" id="ch" data-i18n-ph="custom_h_ph">
+          </div>
+          <button class="btn small" id="cset" data-i18n="use_q"></button>
+        </div>
+      </details>
+    </section>
+
+    <section class="card">
+      <h3 data-i18n="game"></h3>
+      <div class="grid2">
+        <input type="text" id="n0" maxlength="40" style="border-color:var(--p0)">
+        <input type="text" id="n1" maxlength="40" style="border-color:var(--p1)">
+      </div>
+      <div class="btnrow" style="margin-bottom:8px">
+        <button class="btn small" id="saveNames" data-i18n="save_names"></button>
+        <button class="btn small" id="undo"><span data-i18n="undo"></span> <kbd>Ctrl+Z</kbd></button>
+        <button class="btn small" id="edit"></button>
+      </div>
+      <div class="btnrow">
+        <button class="btn small" id="endCount" data-i18n="end_by_count"></button>
+        <button class="btn small p0" id="win0"></button>
+        <button class="btn small p1" id="win1"></button>
+        <button class="btn small accent" id="newRound" data-i18n="rematch"></button>
+      </div>
+    </section>
+
+    <section class="card">
+      <details id="setsBox" open>
+        <summary><h3 data-i18n="question_sets"></h3></summary>
+        <div style="margin-top:10px">
+          <p class="help" id="poolInfo"></p>
+          <p class="warn" id="poolWarn" hidden></p>
+          <div id="sets"></div>
+          <div class="btnrow" style="margin-top:8px">
+            <button class="btn small" id="setsLang" data-i18n="select_lang_sets"></button>
+            <button class="btn small" id="setsNone" data-i18n="select_none"></button>
+            <a class="btn small" href="/sets" target="_blank" data-i18n="edit_sets"></a>
+          </div>
+
+          <h4 data-i18n="custom_title"></h4>
+          <p class="help" id="customInfo"></p>
+          <textarea id="qtext" placeholder="Hlavní město Francie? | Paříž&#10;Is the Sun a star? | YES"></textarea>
+          <p class="help" data-i18n="custom_help"></p>
+          <div class="btnrow">
+            <button class="btn small" id="qAppend" data-i18n="add_questions"></button>
+            <button class="btn small" id="qReplace" data-i18n="replace_custom"></button>
+            <button class="btn small" id="qPreview" data-i18n="preview"></button>
+            <button class="btn small" id="qDownload" data-i18n="download_custom"></button>
+            <button class="btn small bad" id="qClear" data-i18n="clear_custom"></button>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="card">
+      <details>
+        <summary><h3 data-i18n="settings"></h3></summary>
+        <div style="margin-top:10px">
+          <label class="chk"><input type="checkbox" id="sShow"> <span data-i18n="show_question"></span></label>
+          <label style="margin-bottom:8px"><span class="help" data-i18n="sound_label"></span>
+            <select id="sSound">
+              <option value="referee" data-i18n="sound_referee"></option>
+              <option value="board" data-i18n="sound_board"></option>
+              <option value="off" data-i18n="sound_off"></option>
+            </select></label>
+          <p class="help" id="soundHelp" hidden data-i18n="sound_help"></p>
+          <label><span class="help" data-i18n="labels"></span>
+            <select id="sLabel"><option value="numbers" data-i18n="labels_short_numbers"></option><option value="letters" data-i18n="labels_letters"></option></select></label>
+        </div>
+      </details>
+    </section>
+
+    <section class="card">
+      <details>
+        <summary><h3 data-i18n="links_help"></h3></summary>
+        <div style="margin-top:10px">
+          <span class="help" data-i18n="board_link"></span>
+          <div class="linkrow"><input type="text" id="boardLink" readonly><button class="btn small" data-copy="boardLink" data-i18n="copy"></button></div>
+          <span class="help" data-i18n="ref_link"></span>
+          <div class="linkrow"><input type="text" id="refLink" readonly><button class="btn small" data-copy="refLink" data-i18n="copy"></button></div>
+          <p class="help" data-i18n="keys_help"></p>
+          <p class="help" data-i18n="memory_help"></p>
+        </div>
+      </details>
+    </section>
+  </div>
+</div>
+<div class="conn" id="conn"></div>
+
+<script src="/static/js/i18n.js"></script>
+<script src="/static/js/common.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  let state = null, editing = false, setsKey = null;
+  I18N.apply();
+
+  let connected = null;   // null = not yet connected
+  const showConn = () => {
+    $("conn").textContent = I18N.t(connected === null ? "conn_connecting" : connected ? "conn_ok" : "conn_lost");
+    $("conn").classList.toggle("off", connected === false);
+  };
+  showConn();
+  const conn = AZ.connect({ onState: render, onStatus: (ok) => { connected = ok; showConn(); } });
+  const send = conn.send;
+  const boardUrl = `${location.origin}/g/${conn.gid}`;
+  $("boardLink").value = boardUrl;
+  $("refLink").value = location.href.replace(/&popup=blocked/, "");
+  if (new URLSearchParams(location.search).get("popup") === "blocked") $("popupBanner").hidden = false;
+  history.replaceState(null, "", $("refLink").value);
+
+  function openBoard() {
+    const w = window.open(boardUrl, "azkviz-board-" + conn.gid, "popup,width=1280,height=820");
+    if (w) $("popupBanner").hidden = true;
+  }
+  $("openBoard").onclick = openBoard;
+  $("openBoard2").onclick = openBoard;
+
+  const board = AZ.createBoard($("board"), (i) => {
+    if (!state) return;
+    if (editing) {
+      const next = { "-1": 0, 0: 1, 1: 2, 2: -1 }[state.cells[i]];
+      send("set_cell", { cell: i, state: next });
+    } else if (canPick(i)) {
+      send("pick", { cell: i });
+    }
+  });
+  const canPick = (i) => state && state.phase === "pick" && (state.cells[i] === -1 || state.cells[i] === 2);
+  AZ.runTimerBar(() => state && state.timer, $("tbar"), $("tlabel"));
+
+  // Sound plays from this window by default: it has had user interaction, so browsers allow audio.
+  const soundHere = () => state && state.settings.sound === "referee";
+  ["pointerdown", "keydown"].forEach((ev) => addEventListener(ev, () => { try { AZ.audio(); } catch (_) {} }));
+  AZ.runTicker(() => state && state.timer, soundHere);
+
+  // ---- actions ----
+  const ACTIONS = {
+    question: [["ok", "correct", "correct", "S"], ["bad", "wrong_steal", "wrong", "N"], ["wide", "declines", "cancel", "Esc"]],
+    offer: [["accent wide", "steal_accept", "steal_accept", "O"], ["wide", "steal_decline", "steal_decline", "Esc"]],
+    steal: [["ok", "steal_ok", "correct", "S"], ["bad", "steal_bad", "wrong", "N"]],
+    yesno: [["ok", "yn_ok", "correct", "S"], ["bad", "yn_bad", "wrong", "N"], ["wide", "declines", "cancel", "Esc"]],
+    over: [["accent wide", "rematch", "new_round", ""]],
+  };
+
+  function button(cls, text, key, onclick) {
+    const b = document.createElement("button");
+    b.className = "btn " + cls;
+    b.textContent = text;
+    if (key) { const k = document.createElement("kbd"); k.textContent = key; b.appendChild(k); }
+    b.onclick = onclick;
+    return b;
+  }
+
+  function renderActions(s) {
+    const box = $("actions");
+    box.innerHTML = "";
+    if (s.phase === "pick") {
+      [0, 1].forEach((p) => {
+        const b = button(`p${p}`, (p === s.turn ? "✓ " : "") + I18N.t("turn_btn", { name: s.names[p] }), "",
+          () => send("set_turn", { player: p }));
+        b.disabled = p === s.turn;
+        box.appendChild(b);
+      });
+      return;
+    }
+    if (s.question && !s.question.open) {
+      box.appendChild(button("accent wide", I18N.t(s.settings.show_question ? "open_q" : "open_q_timer"), "O",
+        () => send("open_question")));
+    }
+    for (const [cls, key, action, kbd] of ACTIONS[s.phase] || []) {
+      box.appendChild(button(cls, I18N.t(key), kbd, () => send(action)));
+    }
+  }
+
+  function render(s) {
+    const prevSeq = state ? state.event.seq : null;
+    state = s;
+    if (I18N.set(s.settings.lang)) { setsKey = null; showConn(); }
+    document.querySelectorAll("#langswitch button").forEach((b) => b.classList.toggle("on", b.dataset.lang === s.settings.lang));
+    if (prevSeq !== null && s.event.seq !== prevSeq && soundHere()) AZ.play(s.event.type);
+    document.title = I18N.t("title_referee", { a: s.names[0], b: s.names[1] });
+    if (editing && !["pick", "over"].includes(s.phase)) setEditing(false);
+    board.update(s, { clickable: (i) => editing || canPick(i) });
+    $("edit").textContent = I18N.t(editing ? "edit_done" : "edit_fields");
+
+    const answering = ["offer", "steal"].includes(s.phase) ? 1 - s.turn : s.turn;
+    [0, 1].forEach((p) => {
+      $("sc" + p).querySelector(".n").textContent = s.names[p];
+      $("sc" + p).querySelector(".c").textContent = s.counts[p];
+      $("sc" + p).classList.toggle("on", s.phase !== "over" && p === answering);
+      $("win" + p).textContent = I18N.t("winner_btn", { name: s.names[p] });
+      const inp = $("n" + p);
+      if (document.activeElement !== inp) inp.value = s.names[p];
+    });
+
+    const st = $("status");
+    if (s.phase === "over") {
+      st.textContent = s.tie ? I18N.t("tie_ref", { a: s.counts[0], b: s.counts[1] }) : I18N.t("wins", { name: s.names[s.winner] });
+    } else {
+      const span = document.createElement("span");
+      span.className = "who" + answering;
+      span.textContent = s.names[answering];
+      st.textContent = "";
+      st.append(span, " " + AZ.phaseText(s.phase));
+    }
+
+    const q = s.question;
+    $("qcard").hidden = !q;
+    if (q) {
+      const meta = $("qmeta");
+      meta.innerHTML = "";
+      const pills = [`${I18N.t("field")} ${s.labels[s.active]}`, I18N.t(q.kind === "yesno" ? "pill_black" : "pill_regular")];
+      if (q.kind === "open") pills.push(I18N.t("pill_hint", { h: q.h || "—" }));
+      pills.push(I18N.t(q.open ? "pill_open" : "pill_hidden"));
+      if (["offer", "steal"].includes(s.phase)) pills.push(I18N.t("pill_steal"));
+      pills.forEach((t) => { const p = document.createElement("span"); p.className = "pill"; p.textContent = t; meta.appendChild(p); });
+      $("qq").textContent = q.q || "—";
+      $("qa").innerHTML = "<small></small>";
+      $("qa").querySelector("small").textContent = I18N.t("answer_upper");
+      $("qa").appendChild(document.createTextNode(AZ.answerText(q.kind, q.a) || "—"));
+      const note = q.note && I18N.t("note_" + q.note.code, q.note);
+      $("qnote").hidden = !note;
+      $("qnote").textContent = note || "";
+    }
+    $("customBox").style.display = q ? "" : "none";
+    renderActions(s);
+
+    $("boardHelp").textContent = editing ? I18N.t("edit_help")
+      : s.phase === "pick" ? I18N.t("pick_help", { name: s.names[s.turn] }) : "";
+
+    $("undo").disabled = !s.can_undo;
+    $("edit").disabled = !["pick", "over"].includes(s.phase);
+    $("endCount").disabled = s.phase === "over";
+
+    syncSetting("sShow", "checked", s.settings.show_question);
+    syncSetting("sSound", "value", s.settings.sound);
+    $("soundHelp").hidden = s.settings.sound !== "board";
+    syncSetting("sLabel", "value", s.settings.label_mode);
+    renderPool(s);
+  }
+
+  // ---- question sets ----
+  function renderPool(s) {
+    const po = s.pool;
+    $("poolInfo").textContent = I18N.t("pool_summary",
+      { open: po.open.total, uo: po.open.used, yesno: po.yesno.total, uy: po.yesno.used });
+    const warn = [!po.open.total && I18N.t("warn_no_open"), !po.yesno.total && I18N.t("warn_no_yesno")].filter(Boolean).join(" ");
+    $("poolWarn").hidden = !warn;
+    $("poolWarn").textContent = warn;
+    $("customInfo").textContent = I18N.t("custom_count", { open: s.custom.open, yesno: s.custom.yesno });
+    const hasCustom = !!(s.custom.open || s.custom.yesno);
+    ["qPreview", "qDownload", "qClear", "qReplace"].forEach((id) => ($(id).disabled = !hasCustom && id !== "qReplace"));
+    const key = I18N.lang + JSON.stringify(s.sets);
+    if (key === setsKey) return;      // avoid rebuilding the list on every timer tick
+    setsKey = key;
+    const selected = new Set(s.sets.filter((x) => x.selected).map((x) => x.id));
+    AZ.renderSets($("sets"), s.sets, {
+      selected, used: true,
+      onToggle: (id, on) => {
+        on ? selected.add(id) : selected.delete(id);
+        send("select_sets", { sets: [...selected] });
+      },
+    });
+  }
+  $("setsLang").onclick = () => send("select_sets", { sets: state.sets.filter((x) => x.lang === state.settings.lang).map((x) => x.id) });
+  $("setsNone").onclick = () => send("select_sets", { sets: [] });
+
+  function customItems() {
+    const out = { open: [], yesno: [] };
+    for (const line of state.custom.text.split("\n").filter(Boolean)) {
+      const [q, a] = line.split(" | ");
+      const yn = { ANO: "yes", YES: "yes", NE: "no", NO: "no" }[a];
+      (yn ? out.yesno : out.open).push({ q, a: yn || a });
+    }
+    return out;
+  }
+  $("qPreview").onclick = () => AZ.previewSet({ id: "custom", name: { cs: I18N.t("custom_title"), en: I18N.t("custom_title") } }, customItems());
+  $("qDownload").onclick = () => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([state.custom.text], { type: "text/plain;charset=utf-8" }));
+    a.download = `azkviz-questions-${conn.gid}.txt`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  };
+  $("qAppend").onclick = () => { send("load_questions", { text: $("qtext").value, replace: false }); $("qtext").value = ""; };
+  $("qReplace").onclick = () => {
+    if (confirm(I18N.t("confirm_replace"))) { send("load_questions", { text: $("qtext").value, replace: true }); $("qtext").value = ""; }
+  };
+  $("qClear").onclick = () => confirm(I18N.t("confirm_clear")) && send("clear_custom");
+
+  function syncSetting(id, prop, value) {
+    const e = $(id);
+    if (document.activeElement !== e) e[prop] = value;
+  }
+
+  function setEditing(on) {
+    editing = on;
+    $("boardbox").classList.toggle("editing", on);
+    if (state) render(state);
+  }
+
+  // ---- controls ----
+  document.querySelectorAll("#langswitch button").forEach((b) => (b.onclick = () => send("set_settings", { settings: { lang: b.dataset.lang } })));
+  $("edit").onclick = () => setEditing(!editing);
+  $("undo").onclick = () => send("undo");
+  $("saveNames").onclick = () => send("set_names", { names: [$("n0").value, $("n1").value] });
+  $("endCount").onclick = () => confirm(I18N.t("confirm_end")) && send("end_by_count");
+  $("win0").onclick = () => send("declare_winner", { player: 0 });
+  $("win1").onclick = () => send("declare_winner", { player: 1 });
+  $("newRound").onclick = () => (state.phase === "over" || confirm(I18N.t("confirm_new"))) && send("new_round");
+  $("cset").onclick = () => {
+    send("custom_question", { q: $("cq").value, a: $("ca").value, h: $("ch").value });
+    $("cq").value = $("ca").value = $("ch").value = "";
+  };
+  $("sShow").onchange = (e) => send("set_settings", { settings: { show_question: e.target.checked } });
+  $("sSound").onchange = (e) => send("set_settings", { settings: { sound: e.target.value } });
+  $("sLabel").onchange = (e) => send("set_settings", { settings: { label_mode: e.target.value } });
+  document.querySelectorAll("[data-copy]").forEach((b) => {
+    b.onclick = async () => {
+      const inp = $(b.dataset.copy);
+      try { await navigator.clipboard.writeText(inp.value); } catch (_) { inp.select(); document.execCommand("copy"); }
+      b.textContent = I18N.t("copied"); setTimeout(() => (b.textContent = I18N.t("copy")), 1500);
+    };
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (!state || e.target.matches("input, textarea, select") || document.querySelector("dialog[open]")) return;
+    const inQuestion = ["question", "steal", "yesno"].includes(state.phase), offer = state.phase === "offer";
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); send("undo"); return; }
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key.toLowerCase();
+    if (inQuestion && k === "o" && state.question && !state.question.open) send("open_question");
+    else if (offer && k === "o") send("steal_accept");
+    else if (inQuestion && k === "s") send("correct");
+    else if (inQuestion && k === "n") send("wrong");
+    else if (offer && k === "escape") send("steal_decline");
+    else if (k === "escape" && ["question", "yesno"].includes(state.phase)) send("cancel");
+  });
+</script>
+</body>
+</html>

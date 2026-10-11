@@ -1,0 +1,155 @@
+{
+ "id": "en-culture",
+ "lang": "en",
+ "name": {
+  "cs": "Historie a kultura (anglicky)",
+  "en": "History and culture"
+ },
+ "description": {
+  "cs": "Umění, literatura, hudba, dějiny a sport – anglicky.",
+  "en": "Art, books, music, history and sport."
+ },
+ "open": [
+  {
+   "q": "Who painted the Mona Lisa?",
+   "a": "Leonardo da Vinci"
+  },
+  {
+   "q": "Who wrote Romeo and Juliet?",
+   "a": "William Shakespeare"
+  },
+  {
+   "q": "Who painted the famous Sunflowers?",
+   "a": "Vincent van Gogh"
+  },
+  {
+   "q": "Who wrote the Harry Potter books?",
+   "a": "J. K. Rowling"
+  },
+  {
+   "q": "Who wrote The Little Prince?",
+   "a": "Antoine de Saint-Exupéry"
+  },
+  {
+   "q": "Who wrote Les Misérables?",
+   "a": "Victor Hugo"
+  },
+  {
+   "q": "Who wrote Pride and Prejudice?",
+   "a": "Jane Austen"
+  },
+  {
+   "q": "Who painted the ceiling of the Sistine Chapel?",
+   "a": "Michelangelo"
+  },
+  {
+   "q": "Which Liverpool band included John Lennon and Paul McCartney?",
+   "a": "The Beatles"
+  },
+  {
+   "q": "Which Mozart opera features the bird-catcher Papageno?",
+   "a": "The Magic Flute"
+  },
+  {
+   "q": "Which Czech composer wrote the New World Symphony?",
+   "a": "Antonín Dvořák"
+  },
+  {
+   "q": "Who composed the opera The Bartered Bride?",
+   "a": "Bedřich Smetana"
+  },
+  {
+   "q": "Which Czech writer's play R.U.R. introduced the word robot?",
+   "a": "Karel Čapek"
+  },
+  {
+   "q": "Who was the first president of Czechoslovakia?",
+   "a": "Tomáš Garrigue Masaryk"
+  },
+  {
+   "q": "Which explorer reached the Americas in 1492?",
+   "a": "Christopher Columbus"
+  },
+  {
+   "q": "Whose tomb did Howard Carter discover in 1922?",
+   "a": "Tutankhamun"
+  },
+  {
+   "q": "Which Roman city was buried by Mount Vesuvius in AD 79?",
+   "a": "Pompeii"
+  },
+  {
+   "q": "Who is the Greek god of the sea?",
+   "a": "Poseidon"
+  },
+  {
+   "q": "Who is the king of the Greek gods?",
+   "a": "Zeus"
+  },
+  {
+   "q": "Who is the Roman goddess of love?",
+   "a": "Venus"
+  },
+  {
+   "q": "What is the Japanese art of paper folding called?",
+   "a": "origami"
+  },
+  {
+   "q": "Which instrument usually has 88 keys?",
+   "a": "piano"
+  },
+  {
+   "q": "Which Czech-born director made One Flew Over the Cuckoo's Nest and Amadeus?",
+   "a": "Miloš Forman"
+  },
+  {
+   "q": "Who travels around the world in 80 days in Jules Verne's novel?",
+   "a": "Phileas Fogg"
+  },
+  {
+   "q": "What is the first letter of the Greek alphabet?",
+   "a": "alpha"
+  },
+  {
+   "q": "Who was the first president of the United States?",
+   "a": "George Washington"
+  },
+  {
+   "q": "Which wall in Germany fell in 1989?",
+   "a": "Berlin Wall"
+  },
+  {
+   "q": "Which ship sank on its maiden voyage in 1912?",
+   "a": "Titanic"
+  },
+  {
+   "q": "Who was the British prime minister for most of World War II?",
+   "a": "Winston Churchill"
+  },
+  {
+   "q": "Which Czechoslovak runner was nicknamed the Czech Locomotive?",
+   "a": "Emil Zátopek"
+  },
+  {
+   "q": "In which sport is a puck used?",
+   "a": "ice hockey"
+  },
+  {
+   "q": "In which city were the first modern Olympic Games held in 1896?",
+   "a": "Athens"
+  },
+  {
+   "q": "Which Czech player won Wimbledon in 2011 and 2014?",
+   "a": "Petra Kvitová"
+  },
+  {
+   "q": "What is the Italian rice dish cooked slowly in broth called?",
+   "a": "risotto"
+  },
+  {
+   "q": "What is the crescent-shaped French pastry called?",
+   "a": "croissant"
+  }
+ ],
+ "yesno": []
+}

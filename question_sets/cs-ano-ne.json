@@ -1,0 +1,215 @@
+{
+ "id": "cs-ano-ne",
+ "lang": "cs",
+ "name": {
+  "cs": "ANO/NE – všeobecné",
+  "en": "YES/NO – general (in Czech)"
+ },
+ "description": {
+  "cs": "Otázky pro černá pole.",
+  "en": "Questions for black fields."
+ },
+ "open": [],
+ "yesno": [
+  {
+   "q": "Je Mount Everest nejvyšší horou světa?",
+   "a": "yes"
+  },
+  {
+   "q": "Leží Vídeň na Dunaji?",
+   "a": "yes"
+  },
+  {
+   "q": "Je velryba ryba?",
+   "a": "no"
+  },
+  {
+   "q": "Je netopýr savec?",
+   "a": "yes"
+  },
+  {
+   "q": "Napsal Karel Čapek Babičku?",
+   "a": "no"
+  },
+  {
+   "q": "Je Sněžka vyšší než 1 600 metrů?",
+   "a": "yes"
+  },
+  {
+   "q": "Je Mars větší než Země?",
+   "a": "no"
+  },
+  {
+   "q": "Je Sydney hlavním městem Austrálie?",
+   "a": "no"
+  },
+  {
+   "q": "Má pavouk šest nohou?",
+   "a": "no"
+  },
+  {
+   "q": "Vře voda za normálního tlaku při 100 °C?",
+   "a": "yes"
+  },
+  {
+   "q": "Je Slunce hvězda?",
+   "a": "yes"
+  },
+  {
+   "q": "Leží Praha na Labi?",
+   "a": "no"
+  },
+  {
+   "q": "Je delfín savec?",
+   "a": "yes"
+  },
+  {
+   "q": "Byl Tomáš Garrigue Masaryk prvním prezidentem Československa?",
+   "a": "yes"
+  },
+  {
+   "q": "Má zlato chemickou značku Ag?",
+   "a": "no"
+  },
+  {
+   "q": "Žijí tučňáci ve volné přírodě na severním pólu?",
+   "a": "no"
+  },
+  {
+   "q": "Je Brno druhým největším městem České republiky?",
+   "a": "yes"
+  },
+  {
+   "q": "Složil Antonín Dvořák Novosvětskou symfonii?",
+   "a": "yes"
+  },
+  {
+   "q": "Je Tichý oceán největším oceánem?",
+   "a": "yes"
+  },
+  {
+   "q": "Je Venuše planetou nejbližší ke Slunci?",
+   "a": "no"
+  },
+  {
+   "q": "Je součet vnitřních úhlů trojúhelníku 180 stupňů?",
+   "a": "yes"
+  },
+  {
+   "q": "Je číslo 1 prvočíslo?",
+   "a": "no"
+  },
+  {
+   "q": "Je Island členem Evropské unie?",
+   "a": "no"
+  },
+  {
+   "q": "Je Norsko členem Evropské unie?",
+   "a": "no"
+  },
+  {
+   "q": "Platí se na Slovensku eurem?",
+   "a": "yes"
+  },
+  {
+   "q": "Platí se v Polsku eurem?",
+   "a": "no"
+  },
+  {
+   "q": "Je žirafa nejvyšším žijícím suchozemským zvířetem?",
+   "a": "yes"
+  },
+  {
+   "q": "Žijí klokani volně v Africe?",
+   "a": "no"
+  },
+  {
+   "q": "Je Rožmberk největším rybníkem v Česku?",
+   "a": "yes"
+  },
+  {
+   "q": "Napsal William Shakespeare Hamleta?",
+   "a": "yes"
+  },
+  {
+   "q": "Namaloval Pablo Picasso Monu Lisu?",
+   "a": "no"
+  },
+  {
+   "q": "Je diamant tvořen uhlíkem?",
+   "a": "yes"
+  },
+  {
+   "q": "Je rtuť při pokojové teplotě pevná?",
+   "a": "no"
+  },
+  {
+   "q": "Je Grónsko největším ostrovem světa?",
+   "a": "yes"
+  },
+  {
+   "q": "Proběhla bitva na Bílé hoře roku 1620?",
+   "a": "yes"
+  },
+  {
+   "q": "Byl Karel IV. římským císařem?",
+   "a": "yes"
+  },
+  {
+   "q": "Je Měsíc planeta?",
+   "a": "no"
+  },
+  {
+   "q": "Pramení Vltava na Šumavě?",
+   "a": "yes"
+  },
+  {
+   "q": "Leží Olomouc na Moravě?",
+   "a": "yes"
+  },
+  {
+   "q": "Je Ostrava krajským městem Moravskoslezského kraje?",
+   "a": "yes"
+  },
+  {
+   "q": "Je Kanada rozlohou větší než USA?",
+   "a": "yes"
+  },
+  {
+   "q": "Má dospělý člověk obvykle 206 kostí?",
+   "a": "yes"
+  },
+  {
+   "q": "Je odkysličená krev v lidských žilách modrá?",
+   "a": "no"
+  },
+  {
+   "q": "Patří brambory mezi lilkovité rostliny?",
+   "a": "yes"
+  },
+  {
+   "q": "Je Istanbul hlavním městem Turecka?",
+   "a": "no"
+  },
+  {
+   "q": "Protéká řeka Amazonka Jižní Amerikou?",
+   "a": "yes"
+  },
+  {
+   "q": "Je rajče z botanického hlediska plod?",
+   "a": "yes"
+  },
+  {
+   "q": "Je pštros schopen létat?",
+   "a": "no"
+  },
+  {
+   "q": "Má šachovnice 64 polí?",
+   "a": "yes"
+  },
+  {
+   "q": "Napsala Božena Němcová Divou Báru?",
+   "a": "yes"
+  }
+ ]
+}
