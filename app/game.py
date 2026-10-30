@@ -91,6 +91,8 @@ HISTORY_LIMIT = 200
 SNAPSHOT_FIELDS = ("cells", "turn", "phase", "active", "question", "reveal",
                    "winner", "win_cells", "tie", "used", "starting")
 CUSTOM = "custom"
+# The question pool is chosen on the home page; it can't change once the game exists.
+SETUP_ONLY = frozenset({"select_sets", "load_questions", "clear_custom"})
 
 
 class Game:
@@ -256,6 +258,8 @@ class Game:
         # The players' window is a passive projection; only the referee drives the game.
         if not referee:
             raise GameError("not_referee")
+        if action in SETUP_ONLY:
+            raise GameError("pool_locked")
         fn = getattr(self, "act_" + action, None)
         if fn is None:
             raise GameError("unknown_action", action=action)
@@ -370,14 +374,6 @@ class Game:
             setattr(self, f, v)
         self.timer = None
         self._emit("undo")
-
-    def act_set_turn(self, player: int) -> None:
-        if player not in (P0, P1):
-            raise GameError("bad_player")
-        if self.phase != "pick":
-            raise GameError("turn_only_in_pick")
-        self._push_history()
-        self.turn = player
 
     def act_set_cell(self, cell: int, state: int) -> None:
         if self.phase not in ("pick", "over"):

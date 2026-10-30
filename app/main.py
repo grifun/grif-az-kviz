@@ -78,6 +78,24 @@ app = FastAPI(title="AZ-kvíz", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
 
+@app.middleware("http")
+async def revalidate_pages_and_assets(request: Request, call_next):
+    """Make browsers re-check pages and static files on every load (a cheap 304 when unchanged),
+    so an update to the app is never hidden behind a stale cached script."""
+    response = await call_next(request)
+    if not request.url.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
+
+
+@app.middleware("http")
+async def revalidate(request: Request, call_next):
+    # Make browsers check for a newer copy every time, so an update never runs with stale JS.
+    response = await call_next(request)
+    response.headers.setdefault("Cache-Control", "no-cache")
+    return response
+
+
 class NewGame(BaseModel):
     names: list[str] = []
     settings: dict = {}

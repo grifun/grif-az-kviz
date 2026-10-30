@@ -228,6 +228,15 @@ def test_opponent_declines_to_answer():
         game.act_cancel()
 
 
+def test_question_pool_is_locked_during_the_game():
+    game = new_game(sets=["cs-a"])
+    for action, data in [("select_sets", {"sets": []}), ("load_questions", {"text": "Q? | A"}), ("clear_custom", {})]:
+        with pytest.raises(g.GameError) as e:
+            game.handle(action, data, referee=True)
+        assert e.value.code == "pool_locked"
+    assert game.selected == ["cs-a"]
+
+
 def test_players_window_cannot_control_anything():
     game = new_game()
     for action, data in [("pick", {"cell": 0}), ("correct", {}), ("undo", {})]:

@@ -7,7 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><polygon points='50,4 93,27 93,73 50,96 7,73 7,27' fill='%23ffd34d'/></svg>">
 <link rel="stylesheet" href="/static/css/style.css">
 <style>
-  .wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, 520px); gap: 16px; padding: 16px; max-width: 1500px; margin: 0 auto; }
+  .wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, 520px); gap: 16px; padding: 16px 16px 40px; max-width: 1500px; margin: 0 auto; }
   @media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } }
   .left { position: sticky; top: 16px; align-self: start; }
   @media (max-width: 900px) { .left { position: static; } }
@@ -17,29 +17,36 @@
   .topbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
   .topbar .title { font-weight: 800; font-size: 1.2rem; margin-right: auto; }
   .topbar .title span { color: var(--accent); }
+  .btn.undo { background: #fff; color: #10204a; font-size: 1rem; padding: .55em 1.1em; box-shadow: 0 2px 10px rgba(0,0,0,.35); }
+  .btn.undo kbd { background: rgba(16, 32, 74, .12); }
   .scores { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
   .score { border-radius: 12px; padding: 10px 12px; background: var(--panel); border: 3px solid transparent; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
   .score .n { font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .score .c { font-weight: 900; font-size: 1.6rem; }
   .score.p0 .c { color: var(--p0); } .score.p1 .c { color: var(--p1); }
   .score.p0.on { border-color: var(--p0); } .score.p1.on { border-color: var(--p1); }
+  .score.p0.answering { border: 3px dashed var(--p0); } .score.p1.answering { border: 3px dashed var(--p1); }
+  .score .tag { font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-left: auto; }
+  .score.on .tag, .score.answering .tag { color: var(--text); }
   .boardbox { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; }
   .boardbox svg { max-height: 62vh; }
   .boardbox.editing { outline: 3px dashed var(--accent); outline-offset: -3px; }
-  .status { font-size: 1.15rem; font-weight: 700; margin-bottom: 10px; }
+  .status { font-size: 1.15rem; font-weight: 700; margin-bottom: 10px; min-height: 2.8em; }
   .status .who0 { color: var(--p0); } .status .who1 { color: var(--p1); }
-  .qcard { background: var(--bg); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
+  /* Fixed-size control column: nothing below moves when a question opens or closes. */
+  .qcard { background: var(--bg); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; min-height: 250px; }
+  .qcard.empty { border: 2px dashed var(--line); background: transparent; }
   .qmeta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
-  .qq { font-size: 1.15rem; line-height: 1.35; margin-bottom: 8px; }
-  .qa { font-size: 1.5rem; font-weight: 800; color: var(--accent); }
+  .qq { font-size: 1.65rem; font-weight: 600; line-height: 1.3; margin-bottom: 12px; }
+  .qa { font-size: 2.2rem; font-weight: 800; line-height: 1.2; color: var(--accent); }
   .qa small { font-size: .8rem; color: var(--muted); font-weight: 600; display: block; text-transform: uppercase; letter-spacing: .08em; }
   .note { color: var(--accent); font-size: .9rem; margin-top: 6px; }
-  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-content: start; min-height: calc(3 * 3.1rem + 16px); }
   .actions .wide { grid-column: span 2; }
   .actions .btn { padding: .85em .8em; font-size: 1rem; }
   .btnrow { display: flex; gap: 8px; flex-wrap: wrap; }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-  .timer { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .timer { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; min-height: 1.6em; }
   .timer .timerbar { flex: 1 1 120px; }
   .timer #tlabel { font-variant-numeric: tabular-nums; font-weight: 800; min-width: 3em; }
   details > summary { cursor: pointer; font-weight: 700; list-style: none; }
@@ -53,6 +60,10 @@
   .banner .btn { margin-left: 8px; }
   label.chk { display: flex; gap: .5em; align-items: center; margin-bottom: 6px; }
   label.chk input { width: auto; }
+  .setlist { list-style: none; margin: 0; padding: 0; }
+  .setlist li { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); }
+  .setlist li:first-child { border-top: 0; }
+  .setlist small { color: var(--muted); white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -61,12 +72,13 @@
     <div class="topbar">
       <div class="title">AZ-kvíz <span>· <span data-i18n="referee"></span></span></div>
       <div class="langswitch" id="langswitch" data-i18n-title="language"><button data-lang="cs">CS</button><button data-lang="en">EN</button></div>
+      <button class="btn undo" id="undo"><span data-i18n="undo"></span> <kbd>Ctrl+Z</kbd></button>
       <button class="btn small accent" id="openBoard" data-i18n="open_board"></button>
     </div>
     <div class="banner" id="popupBanner" hidden><span data-i18n="popup_blocked"></span> <button class="btn small" id="openBoard2" data-i18n="open_now"></button></div>
     <div class="scores">
-      <div class="score p0" id="sc0"><span class="n"></span><span class="c">0</span></div>
-      <div class="score p1" id="sc1"><span class="n"></span><span class="c">0</span></div>
+      <div class="score p0" id="sc0"><span class="n"></span><span class="tag"></span><span class="c">0</span></div>
+      <div class="score p1" id="sc1"><span class="n"></span><span class="tag"></span><span class="c">0</span></div>
     </div>
     <div class="boardbox" id="boardbox"><svg id="board"></svg></div>
     <p class="help" id="boardHelp"></p>
@@ -75,7 +87,7 @@
   <div class="right">
     <section class="card">
       <div class="status" id="status"></div>
-      <div class="qcard" id="qcard" hidden>
+      <div class="qcard" id="qcard">
         <div class="qmeta" id="qmeta"></div>
         <div class="qq" id="qq"></div>
         <div class="qa" id="qa"></div>
@@ -85,17 +97,6 @@
       <div class="timer">
         <div class="timerbar" id="tbar" hidden><div></div></div><span id="tlabel"></span>
       </div>
-      <details id="customBox" style="margin-top:12px">
-        <summary><h3 data-i18n="custom_q"></h3></summary>
-        <div style="margin-top:8px">
-          <input type="text" id="cq" data-i18n-ph="custom_q_ph" style="margin-bottom:6px">
-          <div class="grid2">
-            <input type="text" id="ca" data-i18n-ph="custom_a_ph">
-            <input type="text" id="ch" data-i18n-ph="custom_h_ph">
-          </div>
-          <button class="btn small" id="cset" data-i18n="use_q"></button>
-        </div>
-      </details>
     </section>
 
     <section class="card">
@@ -106,7 +107,6 @@
       </div>
       <div class="btnrow" style="margin-bottom:8px">
         <button class="btn small" id="saveNames" data-i18n="save_names"></button>
-        <button class="btn small" id="undo"><span data-i18n="undo"></span> <kbd>Ctrl+Z</kbd></button>
         <button class="btn small" id="edit"></button>
       </div>
       <div class="btnrow">
@@ -118,31 +118,9 @@
     </section>
 
     <section class="card">
-      <details id="setsBox" open>
-        <summary><h3 data-i18n="question_sets"></h3></summary>
-        <div style="margin-top:10px">
-          <p class="help" id="poolInfo"></p>
-          <p class="warn" id="poolWarn" hidden></p>
-          <div id="sets"></div>
-          <div class="btnrow" style="margin-top:8px">
-            <button class="btn small" id="setsLang" data-i18n="select_lang_sets"></button>
-            <button class="btn small" id="setsNone" data-i18n="select_none"></button>
-            <a class="btn small" href="/sets" target="_blank" data-i18n="edit_sets"></a>
-          </div>
-
-          <h4 data-i18n="custom_title"></h4>
-          <p class="help" id="customInfo"></p>
-          <textarea id="qtext" placeholder="Hlavní město Francie? | Paříž&#10;Is the Sun a star? | YES"></textarea>
-          <p class="help" data-i18n="custom_help"></p>
-          <div class="btnrow">
-            <button class="btn small" id="qAppend" data-i18n="add_questions"></button>
-            <button class="btn small" id="qReplace" data-i18n="replace_custom"></button>
-            <button class="btn small" id="qPreview" data-i18n="preview"></button>
-            <button class="btn small" id="qDownload" data-i18n="download_custom"></button>
-            <button class="btn small bad" id="qClear" data-i18n="clear_custom"></button>
-          </div>
-        </div>
-      </details>
+      <h3 data-i18n="sets_in_game"></h3>
+      <ul class="setlist" id="setList"></ul>
+      <p class="help" id="poolInfo" style="margin-bottom:0"></p>
     </section>
 
     <section class="card">
@@ -184,7 +162,7 @@
 <script src="/static/js/common.js"></script>
 <script>
   const $ = (id) => document.getElementById(id);
-  let state = null, editing = false, setsKey = null;
+  let state = null, editing = false;
   I18N.apply();
 
   let connected = null;   // null = not yet connected
@@ -246,15 +224,7 @@
   function renderActions(s) {
     const box = $("actions");
     box.innerHTML = "";
-    if (s.phase === "pick") {
-      [0, 1].forEach((p) => {
-        const b = button(`p${p}`, (p === s.turn ? "✓ " : "") + I18N.t("turn_btn", { name: s.names[p] }), "",
-          () => send("set_turn", { player: p }));
-        b.disabled = p === s.turn;
-        box.appendChild(b);
-      });
-      return;
-    }
+    if (s.phase === "pick") return;   // the field is picked by clicking the board
     if (s.question && !s.question.open) {
       box.appendChild(button("accent wide", I18N.t(s.settings.show_question ? "open_q" : "open_q_timer"), "O",
         () => send("open_question")));
@@ -267,7 +237,7 @@
   function render(s) {
     const prevSeq = state ? state.event.seq : null;
     state = s;
-    if (I18N.set(s.settings.lang)) { setsKey = null; showConn(); }
+    if (I18N.set(s.settings.lang)) showConn();
     document.querySelectorAll("#langswitch button").forEach((b) => b.classList.toggle("on", b.dataset.lang === s.settings.lang));
     if (prevSeq !== null && s.event.seq !== prevSeq && soundHere()) AZ.play(s.event.type);
     document.title = I18N.t("title_referee", { a: s.names[0], b: s.names[1] });
@@ -279,7 +249,12 @@
     [0, 1].forEach((p) => {
       $("sc" + p).querySelector(".n").textContent = s.names[p];
       $("sc" + p).querySelector(".c").textContent = s.counts[p];
-      $("sc" + p).classList.toggle("on", s.phase !== "over" && p === answering);
+      // "on turn" always follows s.turn; the opponent answering in a steal gets its own label
+      const onTurn = s.phase !== "over" && p === s.turn;
+      const stealing = ["offer", "steal"].includes(s.phase) && p === answering;
+      $("sc" + p).classList.toggle("on", onTurn);
+      $("sc" + p).classList.toggle("answering", stealing);
+      $("sc" + p).querySelector(".tag").textContent = stealing ? I18N.t("answering_badge") : onTurn ? I18N.t("on_turn") : "";
       $("win" + p).textContent = I18N.t("winner_btn", { name: s.names[p] });
       const inp = $("n" + p);
       if (document.activeElement !== inp) inp.value = s.names[p];
@@ -297,8 +272,11 @@
     }
 
     const q = s.question;
-    $("qcard").hidden = !q;
-    if (q) {
+    $("qcard").classList.toggle("empty", !q);
+    if (!q) {
+      $("qmeta").innerHTML = ""; $("qq").textContent = ""; $("qa").innerHTML = "";
+      $("qnote").hidden = true;
+    } else {
       const meta = $("qmeta");
       meta.innerHTML = "";
       const pills = [`${I18N.t("field")} ${s.labels[s.active]}`, I18N.t(q.kind === "yesno" ? "pill_black" : "pill_regular")];
@@ -314,7 +292,6 @@
       $("qnote").hidden = !note;
       $("qnote").textContent = note || "";
     }
-    $("customBox").style.display = q ? "" : "none";
     renderActions(s);
 
     $("boardHelp").textContent = editing ? I18N.t("edit_help")
@@ -328,57 +305,31 @@
     syncSetting("sSound", "value", s.settings.sound);
     $("soundHelp").hidden = s.settings.sound !== "board";
     syncSetting("sLabel", "value", s.settings.label_mode);
-    renderPool(s);
+    renderSetList(s);
   }
 
-  // ---- question sets ----
-  function renderPool(s) {
-    const po = s.pool;
-    $("poolInfo").textContent = I18N.t("pool_summary",
-      { open: po.open.total, uo: po.open.used, yesno: po.yesno.total, uy: po.yesno.used });
-    const warn = [!po.open.total && I18N.t("warn_no_open"), !po.yesno.total && I18N.t("warn_no_yesno")].filter(Boolean).join(" ");
-    $("poolWarn").hidden = !warn;
-    $("poolWarn").textContent = warn;
-    $("customInfo").textContent = I18N.t("custom_count", { open: s.custom.open, yesno: s.custom.yesno });
-    const hasCustom = !!(s.custom.open || s.custom.yesno);
-    ["qPreview", "qDownload", "qClear", "qReplace"].forEach((id) => ($(id).disabled = !hasCustom && id !== "qReplace"));
-    const key = I18N.lang + JSON.stringify(s.sets);
-    if (key === setsKey) return;      // avoid rebuilding the list on every timer tick
-    setsKey = key;
-    const selected = new Set(s.sets.filter((x) => x.selected).map((x) => x.id));
-    AZ.renderSets($("sets"), s.sets, {
-      selected, used: true,
-      onToggle: (id, on) => {
-        on ? selected.add(id) : selected.delete(id);
-        send("select_sets", { sets: [...selected] });
-      },
-    });
-  }
-  $("setsLang").onclick = () => send("select_sets", { sets: state.sets.filter((x) => x.lang === state.settings.lang).map((x) => x.id) });
-  $("setsNone").onclick = () => send("select_sets", { sets: [] });
-
-  function customItems() {
-    const out = { open: [], yesno: [] };
-    for (const line of state.custom.text.split("\n").filter(Boolean)) {
-      const [q, a] = line.split(" | ");
-      const yn = { ANO: "yes", YES: "yes", NE: "no", NO: "no" }[a];
-      (yn ? out.yesno : out.open).push({ q, a: yn || a });
+  // Read-only list of the question sets this game was created with (fixed for the whole game).
+  function renderSetList(s) {
+    const list = $("setList");
+    list.innerHTML = "";
+    const rows = s.sets.filter((x) => x.selected).map((x) => ({
+      name: x.name[I18N.lang] || x.name.cs, total: x.open + x.yesno, used: x.used.open + x.used.yesno }));
+    if (s.custom.open || s.custom.yesno) {
+      rows.push({ name: I18N.t("custom_title"), total: s.custom.open + s.custom.yesno, used: null });
     }
-    return out;
+    for (const r of rows) {
+      const li = document.createElement("li");
+      const name = document.createElement("span");
+      name.textContent = r.name;
+      const meta = document.createElement("small");
+      meta.textContent = I18N.t("n_open", { n: r.total }) + (r.used ? " · " + I18N.t("used_n", { n: r.used }) : "");
+      li.append(name, meta);
+      list.appendChild(li);
+    }
+    if (!rows.length) { const li = document.createElement("li"); li.textContent = I18N.t("no_sets_selected"); list.appendChild(li); }
+    const po = s.pool;
+    $("poolInfo").textContent = I18N.t("pool_summary", { open: po.open.total, uo: po.open.used, yesno: po.yesno.total, uy: po.yesno.used });
   }
-  $("qPreview").onclick = () => AZ.previewSet({ id: "custom", name: { cs: I18N.t("custom_title"), en: I18N.t("custom_title") } }, customItems());
-  $("qDownload").onclick = () => {
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([state.custom.text], { type: "text/plain;charset=utf-8" }));
-    a.download = `azkviz-questions-${conn.gid}.txt`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  };
-  $("qAppend").onclick = () => { send("load_questions", { text: $("qtext").value, replace: false }); $("qtext").value = ""; };
-  $("qReplace").onclick = () => {
-    if (confirm(I18N.t("confirm_replace"))) { send("load_questions", { text: $("qtext").value, replace: true }); $("qtext").value = ""; }
-  };
-  $("qClear").onclick = () => confirm(I18N.t("confirm_clear")) && send("clear_custom");
 
   function syncSetting(id, prop, value) {
     const e = $(id);
@@ -400,10 +351,6 @@
   $("win0").onclick = () => send("declare_winner", { player: 0 });
   $("win1").onclick = () => send("declare_winner", { player: 1 });
   $("newRound").onclick = () => (state.phase === "over" || confirm(I18N.t("confirm_new"))) && send("new_round");
-  $("cset").onclick = () => {
-    send("custom_question", { q: $("cq").value, a: $("ca").value, h: $("ch").value });
-    $("cq").value = $("ca").value = $("ch").value = "";
-  };
   $("sShow").onchange = (e) => send("set_settings", { settings: { show_question: e.target.checked } });
   $("sSound").onchange = (e) => send("set_settings", { settings: { sound: e.target.value } });
   $("sLabel").onchange = (e) => send("set_settings", { settings: { label_mode: e.target.value } });

@@ -3,7 +3,7 @@
 A web version of the Czech TV quiz show AZ-kvíz. Each game has two windows:
 
 - **Players' window** (`/g/<id>`): a passive projection (for a wall, projector or TV) with no controls and no cursor. It shows the board, the scores and whose turn it is. When a field is picked, its hexagon spins out of the board into a big hexagon with the answer's initials. Its outline drains as the answer clock runs. After the referee judges, it flips to the winner's colour (or black), shows the answer and flies back into the board.
-- **Referee window** (`/g/<id>/referee?t=<token>`): the referee runs the whole game from here. They pick the field the player names, open the question (`O`), judge it, undo, edit fields, change settings and import questions. Keep this link private, because it shows the answers.
+- **Referee window** (`/g/<id>/referee?t=<token>`): the referee runs the whole game from here. They pick the field the player names, open the question (`O`), judge it, undo, edit fields and change settings. Keep this link private, because it shows the answers.
 
 Clicking **Založit hru a otevřít okna** on the home page opens the players' window as a popup and turns the current tab into the referee window.
 
@@ -13,7 +13,7 @@ Clicking **Založit hru a otevřít okna** on the home page opens the players' w
 2. The player on turn names a field and the referee selects it. The players see the field and the hint. The referee then opens the question, which starts the clock. A correct answer wins the field.
 3. If the answer is wrong or time runs out, the opponent chooses whether to answer. If they answer and are right, they win the field. If they are wrong too, the field turns **black**. If they pass, the field turns **black** and they pick a new field.
 4. Picking a black field gives a **yes/no question**. A correct answer wins the field. A wrong answer gives it to the opponent.
-5. The turn passes to the other player after every question, with one exception: if the opponent wins the field by answering in place of the player on turn, that player stays on turn. The referee can override whose turn it is.
+5. The turn passes to the other player after every question, with one exception: if the opponent wins the field by answering in place of the player on turn, that player stays on turn. If the referee makes a mistake, **↶ O krok zpět** (top bar, `Ctrl+Z`) undoes the last step.
 6. If time runs out, the player with more fields wins (**Konec času**). For a tie, the referee asks a tiebreaker and announces the winner.
 
 **Language:** the whole app is in Czech or English. Pick the language with the CS/EN switch on the home page. The referee can change it mid-game with the CS/EN switch in their window, and both windows follow. The players' window has no controls of its own.
@@ -22,13 +22,13 @@ Field labels: numbers 1–28 for the regular round, or letters for the final. In
 
 Sound effects (a tick-tock every second, a sharper, louder tick in the last 3 s, a buzzer at zero, plus chimes for the result) play from the **referee window** by default. Browsers only allow audio in a window that has had a click, and the referee window always has. If the projector has its own speakers on a different computer, switch *Settings → Sound effects* to the players' window and click once anywhere in it. That click controls nothing.
 
-Referee keyboard shortcuts: `O` open the question and start the clock (after a miss: the opponent answers), `S` correct, `N` wrong or time's up, `Esc` the player declines the field (after a miss: the opponent passes), `Ctrl+Z` undo. The answer time is set on the home page before the game starts.
+Referee keyboard shortcuts: `O` open the question and start the clock (after a miss: the opponent answers), `S` correct, `N` wrong or time's up, `Esc` the player declines the field (after a miss: the opponent passes), `Ctrl+Z` one step back (undo). The answer time is set on the home page before the game starts.
 
 ## Questions
 
-Each game has its own **question pool**, built from the **question sets** the referee ticks plus their own questions. You choose sets on the home page, and in the referee window's *Question sets* panel at any time during the game. The panel shows:
+Each game has its own **question pool**, built from the **question sets** the referee ticks plus their own questions. You choose them on the home page before the game starts. Once the game is running, the pool can't be changed. The home page shows:
 
-- how many questions each set has, and how many of them this game has already used
+- how many questions each set has
 - a **Preview** of every question in a set
 - a button to select all sets in the game's language
 - a warning when the pool has no regular or no YES/NO questions
@@ -99,5 +99,3 @@ question_sets/*.json     the question sets (edited in /sets or by hand)
 app/static/              index.html, board.html (players), referee.html, sets.html (editor), css/, js/
 tests/test_game.py
 ```
-#   g r i f - a z - k v i z  
- 
