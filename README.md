@@ -56,7 +56,7 @@ The sets that ship with the app:
 
 A set file has `id`, `lang` (`cs`/`en`), `name` and `description` (each `{cs, en}`), `open: [{q, a, h?}]` and `yesno: [{q, a: "yes"|"no"}]`. `ANO`/`NE` also work as answers in hand-written files. The file name doesn't matter: `id` is what counts, and it falls back to the file name.
 
-The referee's own questions (home page or *Your own questions* in the panel) are added to the pool. They can be previewed, replaced, deleted, or downloaded as `.txt` to reuse in a later game. The format is one question per line:
+Your own questions, pasted on the home page when creating a game, are added to that game's pool. To keep questions for later games, put them in a set in the `/sets` editor. The format is one question per line:
 
 ```
 Hlavní město Francie? | Paříž

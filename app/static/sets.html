@@ -155,7 +155,7 @@
   async function api(method, url, body) {
     const res = await fetch(url, {
       method,
-      headers: { "Content-Type": "application/json", "X-Lang": I18N.lang, "X-Edit-Password": password() },
+      headers: { "Content-Type": "application/json", "X-Lang": I18N.lang, "X-Edit-Password": encodeURIComponent(password()) },
       body: body ? JSON.stringify(body) : undefined,
     });
     const data = await res.json().catch(() => ({}));

@@ -387,3 +387,17 @@ def test_saving_a_set_writes_the_file_content_to_the_log(tmp_path, caplog):
     assert "'logged' created by 127.0.0.1" in created and "Kdo napsal Máj?" in created
     file_text = (tmp_path / "logged.json").read_text(encoding="utf-8").rstrip("\n")
     assert "'logged' saved by 127.0.0.1" in saved and saved.endswith(file_text)   # exactly what's on disk
+
+
+def test_non_ascii_edit_password_and_refusals_are_logged(tmp_path, monkeypatch, caplog):
+    from urllib.parse import quote
+    monkeypatch.setattr(main, "STORE", SetStore(tmp_path))
+    monkeypatch.setattr(main, "EDIT_PASSWORD", "heslo-řeč")
+    client = TestClient(app)
+    good = {"x-edit-password": quote("heslo-řeč")}            # what the editor page sends
+    assert client.get("/api/editor", headers=good).json()["can_edit"] is True
+    assert client.put("/api/sets/diakritika", json={"set": _payload()}, headers=good).status_code == 200
+    with caplog.at_level("INFO", logger="azkviz"):
+        assert client.put("/api/sets/jina", json={"set": _payload()}, headers={"x-edit-password": "x"}).status_code == 403
+    assert any("Set edit refused for PUT /api/sets/jina" in r.getMessage() for r in caplog.records)
+    assert client.head("/").status_code == 200

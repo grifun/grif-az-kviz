@@ -13,6 +13,7 @@ import secrets
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
+from urllib.parse import unquote
 
 from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
@@ -31,6 +32,24 @@ if not _log.handlers:
     _handler.setFormatter(logging.Formatter("%(levelname)s:     [%(name)s] %(message)s"))
     _log.addHandler(_handler)
     _log.setLevel(logging.INFO)
+
+
+
+class _QuietPolling(logging.Filter):
+    """Drop access-log lines for the set editor's background refresh (successful GETs every few
+    seconds), so saves, errors and real page loads stay readable."""
+    QUIET = ("/api/sets", "/api/editor")
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        args = record.args if isinstance(record.args, tuple) else ()
+        if len(args) == 5:   # uvicorn: client, method, path, http version, status
+            _, method, path, _, status = args
+            if method == "GET" and str(path).startswith(self.QUIET) and int(status) < 400:
+                return False
+        return True
+
+
+logging.getLogger("uvicorn.access").addFilter(_QuietPolling())
 
 ROOT = Path(__file__).parent
 STATIC = ROOT / "static"
@@ -113,7 +132,7 @@ class NewGame(BaseModel):
     questions: str = ""            # optional custom questions added to the pool
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 async def index():
     return FileResponse(STATIC / "index.html")
 
@@ -133,17 +152,22 @@ def _client(request: Request) -> str:
 
 def _can_edit(request: Request) -> bool:
     if EDIT_PASSWORD:
-        return secrets.compare_digest(request.headers.get("x-edit-password", ""), EDIT_PASSWORD)
+        # URL-encoded by the browser (headers can't carry e.g. "č"); compared as bytes, which also
+        # works for non-ASCII passwords.
+        given = unquote(request.headers.get("x-edit-password", ""))
+        return secrets.compare_digest(given.encode(), EDIT_PASSWORD.encode())
     return bool(request.client) and request.client.host in LOCAL_HOSTS
 
 
 def _require_editor(request: Request) -> None:
     if not _can_edit(request):
         code = "edit_password" if EDIT_PASSWORD else "edit_forbidden"
+        _log.warning("Set edit refused for %s %s from %s: %s", request.method, request.url.path, _client(request),
+                     "wrong or missing password" if EDIT_PASSWORD else "not localhost and no AZKVIZ_EDIT_PASSWORD set")
         raise HTTPException(403, GameError(code).message(_lang(request)))
 
 
-@app.get("/sets")
+@app.api_route("/sets", methods=["GET", "HEAD"])
 async def sets_page():
     return FileResponse(STATIC / "sets.html")
 
@@ -237,13 +261,13 @@ def _game_or_404(gid: str) -> Game:
     return game
 
 
-@app.get("/g/{gid}")
+@app.api_route("/g/{gid}", methods=["GET", "HEAD"])
 async def board_page(gid: str):
     _game_or_404(gid)
     return FileResponse(STATIC / "board.html")
 
 
-@app.get("/g/{gid}/referee")
+@app.api_route("/g/{gid}/referee", methods=["GET", "HEAD"])
 async def referee_page(gid: str):
     _game_or_404(gid)
     return FileResponse(STATIC / "referee.html")
