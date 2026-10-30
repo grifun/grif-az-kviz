@@ -376,3 +376,14 @@ def test_set_editing_api(tmp_path, monkeypatch):
     assert res.status_code == 409 and "changed in the meantime" in res.json()["detail"]
     assert client.delete(f"/api/sets/api-set?version={version}", headers=h).status_code == 200
     assert client.get("/api/sets/api-set").status_code == 404
+
+
+def test_saving_a_set_writes_the_file_content_to_the_log(tmp_path, caplog):
+    store = SetStore(tmp_path)
+    with caplog.at_level("INFO", logger="azkviz"):
+        s = store.save("logged", _payload(open_=(("Kdo napsal Máj?", "Karel Hynek Mácha"),)), None, who="127.0.0.1")
+        store.save("logged", _payload(open_=(("Nová otázka?", "Ano"),)), s["version"], who="127.0.0.1")
+    created, saved = [r.getMessage() for r in caplog.records if r.name == "azkviz.sets"]
+    assert "'logged' created by 127.0.0.1" in created and "Kdo napsal Máj?" in created
+    file_text = (tmp_path / "logged.json").read_text(encoding="utf-8").rstrip("\n")
+    assert "'logged' saved by 127.0.0.1" in saved and saved.endswith(file_text)   # exactly what's on disk

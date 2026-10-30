@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 import secrets
 import time
@@ -21,6 +22,15 @@ from pydantic import BaseModel
 from .errors import GameError
 from .game import Game
 from .questions import SetStore, public, summary
+
+# App log (set edits etc.). Uvicorn only sets up its own loggers, so ours gets a handler here,
+# printing to stderr in the same style as uvicorn's lines.
+_log = logging.getLogger("azkviz")
+if not _log.handlers:
+    _handler = logging.StreamHandler()
+    _handler.setFormatter(logging.Formatter("%(levelname)s:     [%(name)s] %(message)s"))
+    _log.addHandler(_handler)
+    _log.setLevel(logging.INFO)
 
 ROOT = Path(__file__).parent
 STATIC = ROOT / "static"
@@ -117,6 +127,10 @@ def _lang(request: Request) -> str:
     return "en" if request.headers.get("x-lang") == "en" else "cs"
 
 
+def _client(request: Request) -> str:
+    return request.client.host if request.client else "?"
+
+
 def _can_edit(request: Request) -> bool:
     if EDIT_PASSWORD:
         return secrets.compare_digest(request.headers.get("x-edit-password", ""), EDIT_PASSWORD)
@@ -165,7 +179,7 @@ class SaveSet(BaseModel):
 async def save_set(sid: str, body: SaveSet, request: Request):
     _require_editor(request)
     try:
-        saved = STORE.save(sid, body.set, body.version)
+        saved = STORE.save(sid, body.set, body.version, who=_client(request))
     except GameError as e:
         status = 409 if e.code in ("set_changed", "set_exists") else 400
         raise HTTPException(status, e.message(_lang(request)))
@@ -177,7 +191,7 @@ async def save_set(sid: str, body: SaveSet, request: Request):
 async def delete_set(sid: str, request: Request, version: str = ""):
     _require_editor(request)
     try:
-        STORE.delete(sid, version)
+        STORE.delete(sid, version, who=_client(request))
     except GameError as e:
         status = {"unknown_set": 404, "set_changed": 409}.get(e.code, 400)
         raise HTTPException(status, e.message(_lang(request)))

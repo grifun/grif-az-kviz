@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import re
 import time
 from pathlib import Path
 
 from .errors import GameError
+
+log = logging.getLogger("azkviz.sets")
 
 YES = {"ano", "a", "yes", "y", "true", "1"}
 NO = {"ne", "n", "no", "false", "0"}
@@ -199,7 +202,7 @@ class SetStore:
             raise GameError("unknown_set", set=sid)
         return self.sets[sid]
 
-    def save(self, sid: str, data: dict, version: str | None) -> dict:
+    def save(self, sid: str, data: dict, version: str | None, who: str = "") -> dict:
         """Create (version=None) or overwrite a set. Refuses to overwrite a newer file."""
         self.refresh()
         clean = clean_set(data, sid)
@@ -214,12 +217,18 @@ class SetStore:
             if path.exists():   # a file with this name holds a broken or differently-named set
                 raise GameError("set_exists", set=sid)
         tmp = path.with_suffix(".json.tmp")
-        tmp.write_text(json.dumps(clean, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        text = json.dumps(clean, ensure_ascii=False, indent=1) + "\n"
+        created = not path.exists()
+        tmp.write_text(text, encoding="utf-8")
         os.replace(tmp, path)
+        # The full file goes to the log: on hosts with a temporary disk this is the record of the edit.
+        log.info("Question set %r %s by %s -> %s (%d regular, %d YES/NO). File content:\n%s",
+                 sid, "created" if created else "saved", who or "?", path,
+                 len(clean["open"]), len(clean["yesno"]), text.rstrip("\n"))
         self.refresh(force=True)
         return self.sets[sid]
 
-    def delete(self, sid: str, version: str | None) -> None:
+    def delete(self, sid: str, version: str | None, who: str = "") -> None:
         """Move the set's file to a .deleted/ subfolder (so a mistake can be undone by hand)."""
         self.refresh()
         if sid not in self.sets:
@@ -229,7 +238,9 @@ class SetStore:
         trash = self.dir / ".deleted"
         trash.mkdir(exist_ok=True)
         path = self.paths[sid]
-        os.replace(path, trash / f"{path.stem}-{time.strftime('%Y%m%d-%H%M%S')}.json")
+        target = trash / f"{path.stem}-{time.strftime('%Y%m%d-%H%M%S')}.json"
+        os.replace(path, target)
+        log.info("Question set %r deleted by %s: %s moved to %s", sid, who or "?", path, target)
         self.refresh(force=True)
 
 
