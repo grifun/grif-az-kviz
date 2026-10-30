@@ -74,6 +74,7 @@
       <div class="langswitch" id="langswitch" data-i18n-title="language"><button data-lang="cs">CS</button><button data-lang="en">EN</button></div>
       <button class="btn undo" id="undo"><span data-i18n="undo"></span> <kbd>Ctrl+Z</kbd></button>
       <button class="btn small accent" id="openBoard" data-i18n="open_board"></button>
+      <a class="btn small" id="home" href="/" data-i18n="main_menu"></a>
     </div>
     <div class="banner" id="popupBanner" hidden><span data-i18n="popup_blocked"></span> <button class="btn small" id="openBoard2" data-i18n="open_now"></button></div>
     <div class="scores">
@@ -180,10 +181,15 @@
   history.replaceState(null, "", $("refLink").value);
 
   function openBoard() {
-    const w = window.open(boardUrl, "azkviz-board-" + conn.gid, "popup,width=1280,height=820");
+    const w = window.open(boardUrl, "azkviz-board", "popup,width=1280,height=820");
     if (w) $("popupBanner").hidden = true;
   }
   $("openBoard").onclick = openBoard;
+  // Leaving mid-game asks first; the game itself stays reachable through the referee link.
+  $("home").onclick = (e) => {
+    const started = state && state.phase !== "over" && state.counts[0] + state.counts[1] + state.cells.filter((c) => c === 2).length > 0;
+    if (started && !confirm(I18N.t("confirm_menu"))) e.preventDefault();
+  };
   $("openBoard2").onclick = openBoard;
 
   const board = AZ.createBoard($("board"), (i) => {

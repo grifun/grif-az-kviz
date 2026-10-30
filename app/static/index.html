@@ -109,15 +109,15 @@
   })();
 
   // ---- language ----
-  function storedLang() {
-    try { const l = localStorage.getItem("azkviz-lang"); if (l) return l; } catch (_) {}
-    return (navigator.language || "").toLowerCase().startsWith("cs") ? "cs" : "en";
+  function storedLang() {   // Czech unless the user picked English on this device
+    try { const l = localStorage.getItem("azkviz-ui-lang"); if (l) return l; } catch (_) {}
+    return "cs";
   }
   function setLang(l) {
     const prev = I18N.lang;
     I18N.set(l);
     I18N.apply();
-    try { localStorage.setItem("azkviz-lang", l); } catch (_) {}
+    try { localStorage.setItem("azkviz-ui-lang", l); } catch (_) {}
     document.querySelectorAll("#langswitch button").forEach((b) => b.classList.toggle("on", b.dataset.lang === l));
     // swap untouched default names
     ["p0", "p1"].forEach((n) => {
@@ -180,7 +180,9 @@
       questions: f.get("questions") || "",
     };
     // Open the players' window synchronously inside the click so popup blockers allow it.
-    const popup = window.open("about:blank", "_blank", "popup,width=1280,height=820");
+    // A fixed window name: a new game reuses the players' window of the previous one (e.g. already
+    // full-screen on the projector) instead of opening another.
+    const popup = window.open("about:blank", "azkviz-board", "popup,width=1280,height=820");
     try {
       const res = await fetch("/api/games", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),

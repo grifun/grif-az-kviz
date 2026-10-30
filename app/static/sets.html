@@ -138,13 +138,13 @@
   // cur = { id, version, isNew, data: {lang, name:{cs,en}, description:{cs,en}, open:[{q,a,h}], yesno:[{q,a}]} }
 
   // ---- language ----
-  function storedLang() {
-    try { const l = localStorage.getItem("azkviz-lang"); if (l) return l; } catch (_) {}
-    return (navigator.language || "").toLowerCase().startsWith("cs") ? "cs" : "en";
+  function storedLang() {   // Czech unless the user picked English on this device
+    try { const l = localStorage.getItem("azkviz-ui-lang"); if (l) return l; } catch (_) {}
+    return "cs";
   }
   function setLang(l) {
     I18N.set(l); I18N.apply();
-    try { localStorage.setItem("azkviz-lang", l); } catch (_) {}
+    try { localStorage.setItem("azkviz-ui-lang", l); } catch (_) {}
     document.querySelectorAll("#langswitch button").forEach((b) => b.classList.toggle("on", b.dataset.lang === l));
     renderList(); renderAccess(); if (cur) renderRows(); renderState();
   }
@@ -209,7 +209,7 @@
       await loadStatus();
       if (!status.can_edit) AZ.toast(I18N.t("wrong_password"));
     };
-    inp.onkeydown = (e) => e.key === "Enter" && btn.click();
+    inp.onkeydown = (e) => { if (e.key === "Enter") btn.click(); };   // (returning false here would block typing)
     box.append(I18N.t("read_only_pw"), inp, btn);
   }
 
