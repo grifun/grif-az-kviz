@@ -23,7 +23,7 @@ from pydantic import BaseModel
 from .errors import GameError
 from .game import Game
 from .questions import SetStore, public, summary
-from .storage import StorageError, s3_backend_from_env, seed_if_empty
+from .storage import s3_backend_from_env, s3_related_names
 
 # App log (set edits etc.). Uvicorn only sets up its own loggers, so ours gets a handler here,
 # printing to stderr in the same style as uvicorn's lines.
@@ -55,8 +55,8 @@ logging.getLogger("uvicorn.access").addFilter(_QuietPolling())
 ROOT = Path(__file__).parent
 STATIC = ROOT / "static"
 # Question sets: one JSON file per set (edited by hand or in the /sets editor). They live in an S3
-# bucket folder when S3FOLDER is set, otherwise in a local folder. The local folder also holds the
-# bundled sets, which are uploaded to an empty bucket folder on first start.
+# bucket folder when S3FOLDER is set (and then the local folder is not used at all), otherwise in
+# the local folder.
 SETS_DIR = Path(os.environ.get("AZKVIZ_SETS_DIR") or ROOT.parent / "question_sets").resolve()
 
 
@@ -64,14 +64,22 @@ def _make_store() -> SetStore:
     backend = s3_backend_from_env()
     if backend is None:
         _log.info("Question sets: local folder %s", SETS_DIR)
+        # Say why S3 isn't used: lists the names (never the values) of storage-like variables.
+        names = s3_related_names()
+        _log.info("S3 storage is off because S3FOLDER is not set. Storage-related environment variables "
+                  "this app can see: %s", ", ".join(names) if names else "none")
         return SetStore(SETS_DIR)
-    _log.info("Question sets: S3 %s (endpoint %s)", backend.location, backend.client.meta.endpoint_url)
-    if os.environ.get("S3_SEED", "1") != "0":
-        try:
-            seed_if_empty(backend, SETS_DIR)
-        except StorageError as e:
-            _log.error("Could not check or seed the question storage: %s", e)
-    return SetStore(backend)
+    used = backend.env_names
+    _log.info("Question sets: S3 %s (endpoint %s, region %s; settings from %s)", backend.location,
+              backend.client.meta.endpoint_url, backend.client.meta.region_name,
+              ", ".join(f"{k}={v}" for k, v in used.items()))
+    if not ({"key", "secret"} <= used.keys() or os.environ.get("AWS_ACCESS_KEY_ID")):
+        _log.error("S3 credentials missing: set S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY "
+                   "(found: %s)", ", ".join(sorted(used)) or "none")
+    store = SetStore(backend)
+    if not store.errors or store.sets:
+        _log.info("Loaded %d question sets from S3; the local %s folder is not used", len(store.sets), SETS_DIR.name)
+    return store
 
 
 STORE = _make_store()

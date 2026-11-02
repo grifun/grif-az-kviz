@@ -256,35 +256,37 @@ def test_parse_questions():
 
 
 def test_http_and_websocket_roundtrip():
-    client = TestClient(app)
-    sets = client.get("/api/sets").json()
-    assert any(s["id"] == "en-yes-no" and s["yesno"] == 40 for s in sets)
-    assert client.get("/api/sets/cs-svet").json()["open"]
-    res = client.post("/api/games", json={"names": ["Eva", "Petr"], "sets": ["cs-svet", "cs-ano-ne"]})
-    assert res.status_code == 200
-    gid, token = res.json()["id"], res.json()["token"]
-    assert client.get(f"/g/{gid}").status_code == 200
-    assert client.get(f"/g/{gid}/referee").status_code == 200
-    assert client.get("/g/nope").status_code == 404
+    # One client context = one event loop for every WebSocket, as in the real server. Without it,
+    # each socket gets its own loop and broadcasts between them occasionally hang.
+    with TestClient(app) as client:
+        sets = client.get("/api/sets").json()
+        assert any(s["id"] == "en-yes-no" and s["yesno"] == 40 for s in sets)
+        assert client.get("/api/sets/cs-svet").json()["open"]
+        res = client.post("/api/games", json={"names": ["Eva", "Petr"], "sets": ["cs-svet", "cs-ano-ne"]})
+        assert res.status_code == 200
+        gid, token = res.json()["id"], res.json()["token"]
+        assert client.get(f"/g/{gid}").status_code == 200
+        assert client.get(f"/g/{gid}/referee").status_code == 200
+        assert client.get("/g/nope").status_code == 404
 
-    with client.websocket_connect(f"/ws/{gid}?t={token}") as ref, client.websocket_connect(f"/ws/{gid}") as board:
-        assert ref.receive_json()["state"]["names"] == ["Eva", "Petr"]
-        board.receive_json()
-        board.send_json({"action": "pick", "data": {"cell": 13}})
-        assert board.receive_json()["type"] == "error"
-        ref.send_json({"action": "pick", "data": {"cell": 13}})
-        s_ref, s_board = ref.receive_json()["state"], board.receive_json()["state"]
-        assert s_ref["phase"] == "question" and s_ref["question"]["a"]
-        assert "a" not in s_board["question"]
-        ref.send_json({"action": "open_question"})
-        assert "q" in board.receive_json()["state"]["question"]
-        ref.receive_json()
-        ref.send_json({"action": "correct"})
-        assert ref.receive_json()["state"]["cells"][13] == 0
+        with client.websocket_connect(f"/ws/{gid}?t={token}") as ref, client.websocket_connect(f"/ws/{gid}") as board:
+            assert ref.receive_json()["state"]["names"] == ["Eva", "Petr"]
+            board.receive_json()
+            board.send_json({"action": "pick", "data": {"cell": 13}})
+            assert board.receive_json()["type"] == "error"
+            ref.send_json({"action": "pick", "data": {"cell": 13}})
+            s_ref, s_board = ref.receive_json()["state"], board.receive_json()["state"]
+            assert s_ref["phase"] == "question" and s_ref["question"]["a"]
+            assert "a" not in s_board["question"]
+            ref.send_json({"action": "open_question"})
+            assert "q" in board.receive_json()["state"]["question"]
+            ref.receive_json()
+            ref.send_json({"action": "correct"})
+            assert ref.receive_json()["state"]["cells"][13] == 0
 
-    with client.websocket_connect(f"/ws/{gid}?t=wrong") as bad:
-        msg = bad.receive_json()
-        assert msg["type"] == "error" and msg["fatal"]
+        with client.websocket_connect(f"/ws/{gid}?t=wrong") as bad:
+            msg = bad.receive_json()
+            assert msg["type"] == "error" and msg["fatal"]
 
 
 # ---- question sets stored as files ----
@@ -444,12 +446,11 @@ def test_s3_store_sees_changes_made_directly_in_the_bucket(s3):
     assert store.refresh() is True and list(store.sets) == ["rucni"] and store.errors == []
 
 
-def test_s3_seeding_and_unreachable_storage(s3, tmp_path):
-    from app.storage import S3Backend, seed_if_empty
-    (tmp_path / "a.json").write_text(json.dumps({"id": "a", "name": "A", "open": [{"q": "Q", "a": "A"}]}), encoding="utf-8")
-    backend = S3Backend("azkviz", "nova", client=s3)
-    assert seed_if_empty(backend, tmp_path) == 1 and seed_if_empty(backend, tmp_path) == 0   # only when empty
-    store = SetStore(backend, min_interval=0)
+def test_s3_unreachable_storage_keeps_last_sets(s3):
+    from app.storage import S3Backend
+    s3.put_object(Bucket="azkviz", Key="nova/a.json",
+                  Body=json.dumps({"id": "a", "name": "A", "open": [{"q": "Q", "a": "A"}]}).encode())
+    store = SetStore(S3Backend("azkviz", "nova", client=s3), min_interval=0)
     assert list(store.sets) == ["a"]
     s3.delete_object(Bucket="azkviz", Key="nova/a.json")
     s3.delete_bucket(Bucket="azkviz")                                     # storage goes away
@@ -461,11 +462,48 @@ def test_s3_seeding_and_unreachable_storage(s3, tmp_path):
     assert e.value.code == "storage_error"
 
 
+def test_s3_mode_ignores_local_question_files(s3, monkeypatch, caplog):
+    from app.storage import S3Backend
+    local_before = sorted(p.name for p in main.SETS_DIR.glob("*.json"))
+    assert local_before                                                  # the repo's bundled sets exist...
+    monkeypatch.setattr(main, "s3_backend_from_env", lambda: S3Backend("azkviz", "prazdna", client=s3))
+    with caplog.at_level("INFO", logger="azkviz"):
+        store = main._make_store()
+    assert store.sets == {}                                              # ...but an empty bucket stays empty
+    assert "Contents" not in s3.list_objects_v2(Bucket="azkviz")         # nothing uploaded
+    assert sorted(p.name for p in main.SETS_DIR.glob("*.json")) == local_before
+    assert any("Loaded 0 question sets from S3" in r.getMessage() and "not used" in r.getMessage() for r in caplog.records)
+
+
 def test_s3_backend_from_env():
     from app.storage import s3_backend_from_env
     assert s3_backend_from_env({}) is None
     b = s3_backend_from_env({"S3FOLDER": "muj-bucket/azkviz/sady/", "S3_ACCESS_KEY_ID": "k", "S3_SECRET_ACCESS_KEY": "s"})
     assert (b.bucket, b.prefix, b.location) == ("muj-bucket", "azkviz/sady/", "s3://muj-bucket/azkviz/sady/")
     assert b.client.meta.endpoint_url == "https://s3.filebase.io"
-    b = s3_backend_from_env({"S3_BUCKET": "jiny", "S3FOLDER": "otazky", "S3_ENDPOINT": "http://localhost:9000"})
-    assert (b.bucket, b.prefix, b.client.meta.endpoint_url) == ("jiny", "otazky/", "http://localhost:9000")
+    b = s3_backend_from_env({"S3FOLDER": "jiny", "S3_ENDPOINT": "http://localhost:9000"})
+    assert (b.bucket, b.prefix, b.client.meta.endpoint_url) == ("jiny", "", "http://localhost:9000")
+    assert s3_backend_from_env({"S3BUCKET": "jiny/slozka", "S3_BUCKET": "jiny"}) is None   # only S3FOLDER counts
+
+
+def test_s3_env_names_match_loosely_and_values_are_cleaned():
+    from app.storage import s3_config_from_env, s3_related_names
+    env = {"s3_folder": " 'muj-bucket/azkviz' ", "S3_ACCESS_KEY": '"KEY123"\n',
+           "s3-secret-access-key": " tajne ", "S3_ENDPOINT": "'https://s3.filebase.io'", "PATH": "/usr/bin"}
+    cfg = s3_config_from_env(env)
+    assert (cfg["bucket"], cfg["prefix"]) == ("muj-bucket", "azkviz")
+    kw = cfg["client_kwargs"]
+    assert (kw["aws_access_key_id"], kw["aws_secret_access_key"], kw["endpoint_url"]) == ("KEY123", "tajne", "https://s3.filebase.io")
+    assert cfg["names"] == {"folder": "s3_folder", "key": "S3_ACCESS_KEY", "secret": "s3-secret-access-key", "endpoint": "S3_ENDPOINT"}
+    assert s3_config_from_env({"S3_ACCESS_KEY_ID": "k"}) is None          # no folder -> local storage
+    assert s3_related_names({"S3_FOLDR": "x", "FILEBASE_SECRET": "y", "PATH": "z"}) == ["FILEBASE_SECRET", "S3_FOLDR"]
+
+
+def test_startup_log_explains_storage_choice(monkeypatch, caplog):
+    for name in [n for n in os.environ if "S3" in n.upper()]:
+        monkeypatch.delenv(name)
+    monkeypatch.setenv("S3_FOLDR", "typo")                                # a near miss that isn't S3FOLDER
+    with caplog.at_level("INFO", logger="azkviz"):
+        main._make_store()
+    text = "\n".join(r.getMessage() for r in caplog.records)
+    assert "S3FOLDER is not set" in text and "S3_FOLDR" in text and "typo" not in text   # names, never values

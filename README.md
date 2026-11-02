@@ -37,7 +37,8 @@ Each game has its own **question pool**, built from the **question sets** the re
 
 Sets are stored one JSON file per set, in one of two places:
 
-- **An S3 bucket**, when the `S3FOLDER` environment variable is set. Set it to `bucket` or `bucket/folder`, for example `azkviz-otazky/sady`. Filebase is the default; see the table below for credentials and endpoint. Saves go to the bucket, and nothing is written to the container's disk, so edits survive restarts and redeploys. On the first start with an empty bucket folder, the sets bundled in `question_sets/` are uploaded once. Set `S3_SEED=0` to skip that. If the bucket can't be reached, the game keeps the last sets it loaded. The editor then shows the storage error, and saving is refused until the bucket is reachable again.
+- **An S3 bucket**, when the `S3FOLDER` environment variable is set. Set it to `bucket` or `bucket/folder`, for example `azkviz-otazky/sady`. Filebase is the default; see the table below for credentials and endpoint. Sets are read from and saved to the bucket only, so edits survive restarts and redeploys. The local `question_sets/` folder is **completely ignored** in this mode: it isn't read, and nothing is copied from it to the bucket. An empty bucket folder therefore means no sets until you create some in the `/sets` editor, or upload JSON files to the bucket. If the bucket can't be reached, the game keeps the last sets it loaded. The editor then shows the storage error, and saving is refused until the bucket is reachable again.
+  The startup log says which storage is in use, and why. If S3 is off, it lists the names (never the values) of the storage-related variables the app can see, so a missing or misspelled `S3FOLDER` is easy to spot. Variable names match loosely: `S3FOLDER`, `S3_FOLDER` and `s3folder` are all accepted. Stray spaces and surrounding quotes in values are ignored.
 - **The local `question_sets/` folder**, when `S3FOLDER` isn't set. To use a different folder, set `AZKVIZ_SETS_DIR`.
 
 The storage is the source of truth:
@@ -95,8 +96,6 @@ Games idle for 12 hours are removed. At most 500 games are kept at a time.
 | `S3_SECRET_ACCESS_KEY` | | S3 secret (the Filebase secret). The standard `AWS_SECRET_ACCESS_KEY` also works |
 | `S3_ENDPOINT` | `https://s3.filebase.io` | S3 endpoint |
 | `S3_REGION` | `auto` | region used for request signing |
-| `S3_BUCKET` | | optional: the bucket, if `S3FOLDER` should hold only the folder inside it |
-| `S3_SEED` | `1` | `0` = don't upload the bundled sets to an empty bucket folder |
 | `AZKVIZ_SETS_DIR` | `question_sets/` | local folder with the question-set JSON files (when S3 isn't used) |
 | `AZKVIZ_EDIT_PASSWORD` | *(unset: localhost only)* | password for the `/sets` editor |
 | `PORT` | 8000 (Docker) | port to listen on |

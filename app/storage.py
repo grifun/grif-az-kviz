@@ -88,6 +88,7 @@ class S3Backend:
         prefix = prefix.strip("/")
         self.prefix = prefix + "/" if prefix else ""
         self.location = f"s3://{bucket}/{self.prefix}"
+        self.env_names: dict[str, str] = {}   # which environment variable each setting came from (for the log)
 
     def _call(self, what: str, fn, **kwargs):
         from botocore.exceptions import BotoCoreError, ClientError
@@ -127,37 +128,75 @@ class S3Backend:
         return f"s3://{self.bucket}/{self.prefix}{name}"
 
 
+# Accepted names for each setting. Names match loosely: case, "_", "-" and spaces are ignored,
+# so S3FOLDER, S3_FOLDER and s3folder are all the same variable.
+S3_VARS = {
+    "folder": ("S3FOLDER",),
+    "key": ("S3_ACCESS_KEY_ID", "S3_ACCESS_KEY", "S3_KEY", "FILEBASE_KEY", "ACCESS_KEY_ID"),
+    "secret": ("S3_SECRET_ACCESS_KEY", "S3_SECRET_KEY", "S3_SECRET", "FILEBASE_SECRET", "SECRET_ACCESS_KEY"),
+    "endpoint": ("S3_ENDPOINT",),
+    "region": ("S3_REGION",),
+}
+
+
+def _norm(name: str) -> str:
+    return "".join(ch for ch in name.upper() if ch.isalnum())
+
+
+def _clean(value: str) -> str:
+    """Trim whitespace and surrounding quotes, e.g. a value pasted as 'https://s3.filebase.io'."""
+    value = value.strip()
+    while len(value) >= 2 and value[0] == value[-1] and value[0] in "'\"":
+        value = value[1:-1].strip()
+    return value
+
+
+def _lookup(env, setting: str) -> tuple[str, str]:
+    """(value, variable name used) for a setting, or ("", "") if none of its names is set."""
+    wanted = [_norm(n) for n in S3_VARS[setting]]
+    for want in wanted:              # in order of preference
+        for name, value in env.items():
+            if _norm(name) == want and _clean(value):
+                return _clean(value), name
+    return "", ""
+
+
+def s3_related_names(env=os.environ) -> list[str]:
+    """Names (never values) of environment variables that look storage-related, for diagnostics."""
+    return sorted(n for n in env if any(w in n.upper() for w in ("S3", "FILEBASE", "BUCKET", "AWS_")))
+
+
+def s3_config_from_env(env=os.environ) -> dict | None:
+    """S3 settings if S3FOLDER ("bucket" or "bucket/folder") is set, otherwise None.
+
+    Returns {"bucket", "prefix", "client_kwargs", "names"}; "names" maps each setting to the
+    variable it came from, so the startup log can say exactly what was used.
+    """
+    found = {k: _lookup(env, k) for k in S3_VARS}
+    folder = found["folder"][0].strip("/")
+    if not folder:
+        return None
+    bucket, _, prefix = folder.partition("/")
+    kwargs = {"endpoint_url": found["endpoint"][0] or "https://s3.filebase.io",
+              "region_name": found["region"][0] or "auto"}
+    if found["key"][0]:
+        kwargs["aws_access_key_id"] = found["key"][0]
+    if found["secret"][0]:
+        kwargs["aws_secret_access_key"] = found["secret"][0]
+    names = {k: v[1] for k, v in found.items() if v[1]}
+    return {"bucket": bucket, "prefix": prefix, "client_kwargs": kwargs, "names": names}
+
+
 def s3_backend_from_env(env=os.environ) -> S3Backend | None:
     """S3 storage if S3FOLDER is set (``bucket`` or ``bucket/folder``), otherwise None.
 
     Credentials and endpoint: S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY (or the standard AWS_* variables),
-    S3_ENDPOINT (default Filebase), S3_REGION (default "auto"). With S3_BUCKET set, S3FOLDER is
-    just the folder inside that bucket.
+    S3_ENDPOINT (default Filebase), S3_REGION (default "auto").
     """
-    folder = env.get("S3FOLDER", "").strip().strip("/")
-    if not folder and not env.get("S3_BUCKET"):
+    cfg = s3_config_from_env(env)
+    if cfg is None:
         return None
-    if env.get("S3_BUCKET"):
-        bucket, prefix = env["S3_BUCKET"].strip(), folder
-    else:
-        bucket, _, prefix = folder.partition("/")
-    kwargs = {"endpoint_url": env.get("S3_ENDPOINT") or "https://s3.filebase.io",
-              "region_name": env.get("S3_REGION") or "auto"}
-    if env.get("S3_ACCESS_KEY_ID"):
-        kwargs["aws_access_key_id"] = env["S3_ACCESS_KEY_ID"]
-    if env.get("S3_SECRET_ACCESS_KEY"):
-        kwargs["aws_secret_access_key"] = env["S3_SECRET_ACCESS_KEY"]
-    return S3Backend(bucket, prefix, **kwargs)
+    backend = S3Backend(cfg["bucket"], cfg["prefix"], **cfg["client_kwargs"])
+    backend.env_names = cfg["names"]
+    return backend
 
-
-def seed_if_empty(backend, source: Path) -> int:
-    """Upload the bundled set files when the storage has none yet (first start with a new bucket)."""
-    if backend.list():
-        return 0
-    files = sorted(Path(source).glob("*.json"))
-    for f in files:
-        backend.write(f.name, f.read_text(encoding="utf-8"))
-    if files:
-        log.info("Question storage %s was empty: uploaded %d bundled set files from %s",
-                 backend.location, len(files), source)
-    return len(files)
