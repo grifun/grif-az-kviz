@@ -1,16 +1,17 @@
-"""Question sets (one JSON file per set in a folder), pasted questions, answer initials."""
+"""Question sets (one JSON file per set, in a folder or S3 bucket), pasted questions, answer initials."""
 
 from __future__ import annotations
 
 import hashlib
 import json
 import logging
-import os
 import re
+import threading
 import time
 from pathlib import Path
 
 from .errors import GameError
+from .storage import LocalBackend, StorageError
 
 log = logging.getLogger("azkviz.sets")
 
@@ -142,59 +143,93 @@ def clean_set(data: dict, sid: str | None = None) -> dict:
 
 
 class SetStore:
-    """Question sets kept as one JSON file per set in a folder.
+    """Question sets kept as one JSON file per set, in a local folder or an S3 bucket.
 
-    The folder is the source of truth: files edited by hand are picked up by refresh(),
-    and saves from the editor are written back atomically.
+    The storage is the source of truth: files changed there (by hand, or by another server) are
+    picked up by refresh(), and saves from the editor are written straight back. Thread-safe, so
+    slow storage (S3) can be used from a worker thread without blocking running games.
     """
 
-    def __init__(self, directory: Path):
-        self.dir = Path(directory)
-        self.dir.mkdir(parents=True, exist_ok=True)
+    def __init__(self, backend, min_interval: float | None = None):
+        if isinstance(backend, (str, Path)):
+            backend = LocalBackend(backend)
+        self.backend = backend
+        self.min_interval = backend.min_interval if min_interval is None else min_interval
         self.sets: dict[str, dict] = {}
-        self.paths: dict[str, Path] = {}
-        self.errors: list[dict] = []
+        self.files: dict[str, str] = {}        # set id -> file name
         self.generation = 0     # bumped on every reload, so watchers notice changes whoever triggered them
+        self._file_errors: list[dict] = []
+        self._storage_error: str | None = None
+        self._cache: dict[str, tuple[str, dict]] = {}   # file name -> (version token, parsed set or error)
         self._signature = None
+        self._last_scan = float("-inf")
+        self._lock = threading.RLock()
         self.refresh(force=True)
 
-    def _scan(self):
-        return tuple(sorted((f.name, f.stat().st_mtime_ns, f.stat().st_size) for f in self.dir.glob("*.json")))
+    @property
+    def errors(self) -> list[dict]:
+        out = list(self._file_errors)
+        if self._storage_error:
+            err = GameError("storage_error", error=self._storage_error)
+            out.insert(0, {"file": self.backend.location, "message": {l: err.message(l) for l in SET_LANGS}})
+        return out
+
+    def _parse(self, name: str, token: str) -> dict:
+        try:
+            data = json.loads(self.backend.read(name))
+            s = clean_set(data, data.get("id") or Path(name).stem)
+        except GameError as e:
+            return {"error": {"file": name, "message": {l: e.message(l) for l in SET_LANGS}}}
+        except (StorageError, ValueError, AttributeError, TypeError) as e:
+            err = GameError("bad_file", error=str(e)[:200])
+            return {"error": {"file": name, "message": {l: err.message(l) for l in SET_LANGS}}}
+        for kind in ("open", "yesno"):
+            for item in s[kind]:
+                item["k"] = qkey(item)
+        s["version"], s["file"] = token, name
+        return s
 
     def refresh(self, force: bool = False) -> bool:
-        """Reload the folder if any file was added, removed or modified. Returns True if it changed."""
-        try:
-            signature = self._scan()
-        except OSError:
-            return False
-        if signature == self._signature and not force:
-            return False
-        self._signature = signature
-        sets, paths, errors = {}, {}, []
-        for f in sorted(self.dir.glob("*.json")):
+        """Reload if any file was added, removed or modified. Returns True if anything changed.
+
+        Without force, the storage is checked at most every `min_interval` seconds.
+        """
+        with self._lock:
+            now = time.monotonic()
+            if not force and now - self._last_scan < self.min_interval:
+                return False
+            self._last_scan = now
             try:
-                data = json.loads(f.read_text(encoding="utf-8"))
-                s = clean_set(data, data.get("id") or f.stem)
-                if s["id"] in sets:
-                    raise GameError("set_exists", set=s["id"])
-            except GameError as e:
-                errors.append({"file": f.name, "message": {l: e.message(l) for l in SET_LANGS}})
-                continue
-            except (OSError, ValueError, AttributeError, TypeError) as e:
-                err = GameError("bad_file", error=str(e)[:200])
-                errors.append({"file": f.name, "message": {l: err.message(l) for l in SET_LANGS}})
-                continue
-            for kind in ("open", "yesno"):
-                for item in s[kind]:
-                    item["k"] = qkey(item)
-            st = f.stat()
-            s["version"] = f"{st.st_mtime_ns}-{st.st_size}"
-            s["file"] = f.name
-            sets[s["id"]] = s
-            paths[s["id"]] = f
-        self.sets, self.paths, self.errors = sets, paths, errors
-        self.generation += 1
-        return True
+                listing = self.backend.list()
+            except StorageError as e:
+                if str(e) != self._storage_error:     # log once per new problem, keep the last good sets
+                    log.warning("Question storage unavailable, keeping the last loaded sets: %s", e)
+                    self._storage_error = str(e)
+                    self.generation += 1
+                    return True
+                return False
+            recovered = self._storage_error is not None
+            self._storage_error = None
+            signature = tuple(sorted(listing.items()))
+            if signature == self._signature and not force and not recovered:
+                return False
+            self._signature = signature
+            sets, files, errors, cache = {}, {}, [], {}
+            for name in sorted(listing):
+                token = listing[name]
+                cached = self._cache.get(name)
+                entry = cached[1] if cached and cached[0] == token else self._parse(name, token)
+                cache[name] = (token, entry)
+                if "error" in entry:
+                    errors.append(entry["error"])
+                elif entry["id"] in sets:
+                    err = GameError("set_exists", set=entry["id"])
+                    errors.append({"file": name, "message": {l: err.message(l) for l in SET_LANGS}})
+                else:
+                    sets[entry["id"]], files[entry["id"]] = entry, name
+            self.sets, self.files, self._file_errors, self._cache = sets, files, errors, cache
+            self.generation += 1
+            return True
 
     def get(self, sid: str) -> dict:
         self.refresh()
@@ -204,44 +239,50 @@ class SetStore:
 
     def save(self, sid: str, data: dict, version: str | None, who: str = "") -> dict:
         """Create (version=None) or overwrite a set. Refuses to overwrite a newer file."""
-        self.refresh()
-        clean = clean_set(data, sid)
-        if sid in self.sets:
-            if version != self.sets[sid]["version"]:
-                raise GameError("set_changed" if version else "set_exists", set=sid)
-            path = self.paths[sid]
-        else:
-            if version:
-                raise GameError("set_changed", set=sid)
-            path = self.dir / f"{sid}.json"
-            if path.exists():   # a file with this name holds a broken or differently-named set
-                raise GameError("set_exists", set=sid)
-        tmp = path.with_suffix(".json.tmp")
-        text = json.dumps(clean, ensure_ascii=False, indent=1) + "\n"
-        created = not path.exists()
-        tmp.write_text(text, encoding="utf-8")
-        os.replace(tmp, path)
-        # The full file goes to the log: on hosts with a temporary disk this is the record of the edit.
-        log.info("Question set %r %s by %s -> %s (%d regular, %d YES/NO). File content:\n%s",
-                 sid, "created" if created else "saved", who or "?", path,
-                 len(clean["open"]), len(clean["yesno"]), text.rstrip("\n"))
-        self.refresh(force=True)
-        return self.sets[sid]
+        with self._lock:
+            self.refresh(force=True)          # compare against what is in the storage right now
+            if self._storage_error:
+                raise GameError("storage_error", error=self._storage_error)
+            clean = clean_set(data, sid)
+            if sid in self.sets:
+                if version != self.sets[sid]["version"]:
+                    raise GameError("set_changed" if version else "set_exists", set=sid)
+                name, created = self.files[sid], False
+            else:
+                if version:
+                    raise GameError("set_changed", set=sid)
+                name, created = f"{sid}.json", True
+                if name in self._cache:       # a file with this name holds a broken or differently-named set
+                    raise GameError("set_exists", set=sid)
+            text = json.dumps(clean, ensure_ascii=False, indent=1) + "\n"
+            try:
+                self.backend.write(name, text)
+            except StorageError as e:
+                log.error("Saving question set %r failed: %s", sid, e)
+                raise GameError("storage_error", error=str(e)[:300]) from e
+            # The full file goes to the log: a record of every edit, wherever the storage is.
+            log.info("Question set %r %s by %s -> %s (%d regular, %d YES/NO). File content:\n%s",
+                     sid, "created" if created else "saved", who or "?", self.backend.where(name),
+                     len(clean["open"]), len(clean["yesno"]), text.rstrip("\n"))
+            self.refresh(force=True)
+            return self.sets[sid]
 
     def delete(self, sid: str, version: str | None, who: str = "") -> None:
         """Move the set's file to a .deleted/ subfolder (so a mistake can be undone by hand)."""
-        self.refresh()
-        if sid not in self.sets:
-            raise GameError("unknown_set", set=sid)
-        if version != self.sets[sid]["version"]:
-            raise GameError("set_changed", set=sid)
-        trash = self.dir / ".deleted"
-        trash.mkdir(exist_ok=True)
-        path = self.paths[sid]
-        target = trash / f"{path.stem}-{time.strftime('%Y%m%d-%H%M%S')}.json"
-        os.replace(path, target)
-        log.info("Question set %r deleted by %s: %s moved to %s", sid, who or "?", path, target)
-        self.refresh(force=True)
+        with self._lock:
+            self.refresh(force=True)
+            if sid not in self.sets:
+                raise GameError("unknown_set", set=sid)
+            if version != self.sets[sid]["version"]:
+                raise GameError("set_changed", set=sid)
+            name = self.files[sid]
+            try:
+                target = self.backend.trash(name)
+            except StorageError as e:
+                log.error("Deleting question set %r failed: %s", sid, e)
+                raise GameError("storage_error", error=str(e)[:300]) from e
+            log.info("Question set %r deleted by %s: %s moved to %s", sid, who or "?", self.backend.where(name), target)
+            self.refresh(force=True)
 
 
 def summary(s: dict) -> dict:

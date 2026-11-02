@@ -33,12 +33,17 @@ Each game has its own **question pool**, built from the **question sets** the re
 - a button to select all sets in the game's language
 - a warning when the pool has no regular or no YES/NO questions
 
-### The question-set folder
+### Where the question sets are stored
 
-Sets are loaded from the **`question_sets/`** folder, one JSON file per set. To use another folder, set the `AZKVIZ_SETS_DIR` environment variable. The folder is the source of truth:
+Sets are stored one JSON file per set, in one of two places:
+
+- **An S3 bucket**, when the `S3FOLDER` environment variable is set. Set it to `bucket` or `bucket/folder`, for example `azkviz-otazky/sady`. Filebase is the default; see the table below for credentials and endpoint. Saves go to the bucket, and nothing is written to the container's disk, so edits survive restarts and redeploys. On the first start with an empty bucket folder, the sets bundled in `question_sets/` are uploaded once. Set `S3_SEED=0` to skip that. If the bucket can't be reached, the game keeps the last sets it loaded. The editor then shows the storage error, and saving is refused until the bucket is reachable again.
+- **The local `question_sets/` folder**, when `S3FOLDER` isn't set. To use a different folder, set `AZKVIZ_SETS_DIR`.
+
+The storage is the source of truth:
 
 - **Editing in the app:** open **Edit sets ↗** from the home page or the referee window, or go to `/sets` directly. You can create, rename and delete sets, and add, edit or remove questions there. There's also a search box, bulk paste in the `question | answer` format, an automatic hint preview, a `.json` download, and `Ctrl+S` to save. Each save writes that set's file at once, using a temporary file and an atomic rename.
-- **Editing by hand:** the server checks the folder every 3 seconds. Files added, changed or removed in a text editor are picked up without a restart.
+- **Editing by hand:** the server checks the storage for changes, every 3 seconds for a local folder and every 10 seconds for S3. Files added, changed or removed outside the app (in a text editor, or uploaded to the bucket) are picked up without a restart. Only files directly in the folder count, not subfolders.
 - **Live updates:** after a change, every open referee window updates its set list and its game's pool. A question already used in a game stays used, and a deleted set drops out of the pool.
 - **Logging:** every save writes a log line to the server's standard error output, in the same stream as uvicorn's own messages. The line names the set, the client address and the file path, and it's followed by the complete content of the saved file. Deleting a set logs where its file was moved. On a host with a temporary disk, the log is your record of what was edited.
 - **Deleting:** a deleted set's file is moved to `question_sets/.deleted/`, so you can bring it back by moving it out again.
@@ -81,11 +86,18 @@ Stack: FastAPI and WebSockets, with vanilla JS and no build step. Game state is 
 
 Games idle for 12 hours are removed. At most 500 games are kept at a time.
 
-**Set edits on free hosting:** free tiers such as Render's have a temporary disk. Edits made in the `/sets` editor survive while the instance runs, but they are lost on a redeploy or restart, when the folder resets to what's in the repository. To keep them, download the edited sets (*Download .json*) and commit them to `question_sets/`. Alternatively, point `AZKVIZ_SETS_DIR` at a persistent disk, if your host offers one.
+**Set edits on free hosting:** free tiers such as Render's have a temporary disk. With local storage, edits made in the `/sets` editor are lost on a redeploy or restart, when the folder resets to what's in the repository. Use S3 storage (`S3FOLDER`) to keep them. Otherwise, download the edited sets (*Download .json*) and commit them to `question_sets/`.
 
 | Environment variable | Default | Meaning |
 |---|---|---|
-| `AZKVIZ_SETS_DIR` | `question_sets/` | folder with the question-set JSON files |
+| `S3FOLDER` | *(unset: local folder)* | `bucket` or `bucket/folder` in S3 for the question sets |
+| `S3_ACCESS_KEY_ID` | | S3 access key (the Filebase key). The standard `AWS_ACCESS_KEY_ID` also works |
+| `S3_SECRET_ACCESS_KEY` | | S3 secret (the Filebase secret). The standard `AWS_SECRET_ACCESS_KEY` also works |
+| `S3_ENDPOINT` | `https://s3.filebase.io` | S3 endpoint |
+| `S3_REGION` | `auto` | region used for request signing |
+| `S3_BUCKET` | | optional: the bucket, if `S3FOLDER` should hold only the folder inside it |
+| `S3_SEED` | `1` | `0` = don't upload the bundled sets to an empty bucket folder |
+| `AZKVIZ_SETS_DIR` | `question_sets/` | local folder with the question-set JSON files (when S3 isn't used) |
 | `AZKVIZ_EDIT_PASSWORD` | *(unset: localhost only)* | password for the `/sets` editor |
 | `PORT` | 8000 (Docker) | port to listen on |
 
@@ -94,7 +106,8 @@ Games idle for 12 hours are removed. At most 500 games are kept at a time.
 ```
 app/main.py              HTTP routes + WebSocket hub
 app/game.py              board topology, win detection, turn state machine, question pool
-app/questions.py         SetStore (folder of set files: load, validate, save, delete, watch), pasted questions, initials
+app/questions.py         SetStore (load, validate, save, delete, watch the set files), pasted questions, initials
+app/storage.py           where the set files live: local folder or S3 bucket
 app/errors.py            error messages in Czech and English
 question_sets/*.json     the question sets (edited in /sets or by hand)
 app/static/              index.html, board.html (players), referee.html, sets.html (editor), css/, js/

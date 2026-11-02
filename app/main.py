@@ -23,6 +23,7 @@ from pydantic import BaseModel
 from .errors import GameError
 from .game import Game
 from .questions import SetStore, public, summary
+from .storage import StorageError, s3_backend_from_env, seed_if_empty
 
 # App log (set edits etc.). Uvicorn only sets up its own loggers, so ours gets a handler here,
 # printing to stderr in the same style as uvicorn's lines.
@@ -53,9 +54,27 @@ logging.getLogger("uvicorn.access").addFilter(_QuietPolling())
 
 ROOT = Path(__file__).parent
 STATIC = ROOT / "static"
-# Question sets: one JSON file per set in this folder (edited by hand or in the /sets editor).
+# Question sets: one JSON file per set (edited by hand or in the /sets editor). They live in an S3
+# bucket folder when S3FOLDER is set, otherwise in a local folder. The local folder also holds the
+# bundled sets, which are uploaded to an empty bucket folder on first start.
 SETS_DIR = Path(os.environ.get("AZKVIZ_SETS_DIR") or ROOT.parent / "question_sets").resolve()
-STORE = SetStore(SETS_DIR)
+
+
+def _make_store() -> SetStore:
+    backend = s3_backend_from_env()
+    if backend is None:
+        _log.info("Question sets: local folder %s", SETS_DIR)
+        return SetStore(SETS_DIR)
+    _log.info("Question sets: S3 %s (endpoint %s)", backend.location, backend.client.meta.endpoint_url)
+    if os.environ.get("S3_SEED", "1") != "0":
+        try:
+            seed_if_empty(backend, SETS_DIR)
+        except StorageError as e:
+            _log.error("Could not check or seed the question storage: %s", e)
+    return SetStore(backend)
+
+
+STORE = _make_store()
 # Editing sets: with a password set, anyone who knows it may edit; without one, only the
 # computer running the server (localhost) may edit.
 EDIT_PASSWORD = os.environ.get("AZKVIZ_EDIT_PASSWORD", "")
@@ -80,7 +99,7 @@ async def _watch_sets_loop() -> None:
     seen = STORE.generation
     while True:
         await asyncio.sleep(WATCH_SECONDS)
-        STORE.refresh()
+        await asyncio.to_thread(STORE.refresh)
         if STORE.generation != seen:   # changed on disk, or reloaded by an API call in the meantime
             seen = STORE.generation
             await broadcast_all()
@@ -174,7 +193,7 @@ async def sets_page():
 
 @app.get("/api/sets")
 async def list_sets():
-    STORE.refresh()   # (the watcher broadcasts any change this picks up)
+    await asyncio.to_thread(STORE.refresh)   # (the watcher broadcasts any change this picks up)
     return [summary(s) for s in STORE.sets.values()]
 
 
@@ -182,15 +201,15 @@ async def list_sets():
 async def get_set(sid: str, request: Request):
     """Full content of a set (used by the preview and the editor)."""
     try:
-        return public(STORE.get(sid))
+        return public(await asyncio.to_thread(STORE.get, sid))
     except GameError as e:
         raise HTTPException(404, e.message(_lang(request)))
 
 
 @app.get("/api/editor")
 async def editor_status(request: Request):
-    STORE.refresh()
-    return {"can_edit": _can_edit(request), "needs_password": bool(EDIT_PASSWORD), "dir": str(SETS_DIR),
+    await asyncio.to_thread(STORE.refresh)
+    return {"can_edit": _can_edit(request), "needs_password": bool(EDIT_PASSWORD), "dir": STORE.backend.location,
             "errors": STORE.errors}
 
 
@@ -203,9 +222,9 @@ class SaveSet(BaseModel):
 async def save_set(sid: str, body: SaveSet, request: Request):
     _require_editor(request)
     try:
-        saved = STORE.save(sid, body.set, body.version, who=_client(request))
+        saved = await asyncio.to_thread(STORE.save, sid, body.set, body.version, _client(request))
     except GameError as e:
-        status = 409 if e.code in ("set_changed", "set_exists") else 400
+        status = 409 if e.code in ("set_changed", "set_exists") else 502 if e.code == "storage_error" else 400
         raise HTTPException(status, e.message(_lang(request)))
     await broadcast_all()
     return public(saved)
@@ -215,9 +234,9 @@ async def save_set(sid: str, body: SaveSet, request: Request):
 async def delete_set(sid: str, request: Request, version: str = ""):
     _require_editor(request)
     try:
-        STORE.delete(sid, version, who=_client(request))
+        await asyncio.to_thread(STORE.delete, sid, version, _client(request))
     except GameError as e:
-        status = {"unknown_set": 404, "set_changed": 409}.get(e.code, 400)
+        status = {"unknown_set": 404, "set_changed": 409, "storage_error": 502}.get(e.code, 400)
         raise HTTPException(status, e.message(_lang(request)))
     await broadcast_all()
     return {"ok": True}
@@ -225,8 +244,8 @@ async def delete_set(sid: str, request: Request, version: str = ""):
 
 @app.post("/api/sets/reload")
 async def reload_sets():
-    """Re-read the folder now (it is also watched every few seconds)."""
-    if STORE.refresh(force=True):
+    """Re-read the storage now (it is also watched every few seconds)."""
+    if await asyncio.to_thread(STORE.refresh, True):
         await broadcast_all()
     return {"sets": len(STORE.sets), "errors": STORE.errors}
 
@@ -239,8 +258,8 @@ async def create_game(body: NewGame):
         sockets.pop(oldest.id, None)
     names = (body.names + ["", ""])[:2]
     lang = body.settings.get("lang", "cs")
+    await asyncio.to_thread(STORE.refresh)
     try:
-        STORE.refresh()
         game = Game(names, body.settings, STORE, body.sets)
         if body.questions.strip():
             game.act_load_questions(body.questions)

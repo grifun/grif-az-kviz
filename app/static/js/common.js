@@ -223,6 +223,36 @@ const AZ = (() => {
     src.start();
     tone(freq, 0, 0.05, "square", vol * 0.25);
   }
+  // Brass-like note: two slightly detuned sawtooths through a lowpass that opens on the attack.
+  function brass(freq, start, dur, vol = 0.09) {
+    const ctx = audio();
+    const t0 = ctx.currentTime + start, end = t0 + dur;
+    const lp = ctx.createBiquadFilter(), g = ctx.createGain();
+    lp.type = "lowpass"; lp.Q.value = 2;
+    lp.frequency.setValueAtTime(500, t0);
+    lp.frequency.exponentialRampToValueAtTime(freq * 6, t0 + 0.06);
+    lp.frequency.exponentialRampToValueAtTime(freq * 3, end);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + 0.03);
+    g.gain.setValueAtTime(vol * 0.85, Math.max(t0 + 0.04, end - 0.08));
+    g.gain.exponentialRampToValueAtTime(0.0001, end + 0.12);
+    lp.connect(g).connect(ctx.destination);
+    for (const detune of [-6, 6]) {
+      const o = ctx.createOscillator();
+      o.type = "sawtooth"; o.frequency.value = freq; o.detune.value = detune;
+      o.connect(lp);
+      o.start(t0); o.stop(end + 0.15);
+    }
+  }
+  // Victory fanfare (~3 s): "ta-ta-ta-taaa, ta-taa-ta, ta-TAAA" ending on a held C major chord.
+  function fanfare() {
+    const C5 = 523.25, Ab4 = 415.3, Bb4 = 466.16, E5 = 659.25, G5 = 783.99;
+    const melody = [[C5, 0, 0.1], [C5, 0.13, 0.1], [C5, 0.26, 0.1], [C5, 0.39, 0.42],
+      [Ab4, 0.86, 0.36], [Bb4, 1.26, 0.36], [C5, 1.66, 0.18], [Bb4, 1.9, 0.12], [C5, 2.05, 1.0]];
+    melody.forEach(([f, t, d]) => brass(f, t, d, 0.1));
+    brass(E5, 2.05, 1.0, 0.06); brass(G5, 2.05, 1.0, 0.05); brass(130.81, 2.05, 1.0, 0.07);   // final chord + bass
+    [1046.5, 1318.5, 1568, 2093].forEach((f, i) => tone(f, 2.1 + i * 0.06, 0.5, "triangle", 0.05));   // sparkle
+  }
   const SOUNDS = {
     pick: () => sweep(260, 1100, 0.6),
     open: () => { tone(784, 0, 0.12, "triangle", 0.12); tone(1175, 0.08, 0.25, "triangle", 0.12); },
@@ -233,7 +263,7 @@ const AZ = (() => {
     correct: () => { tone(660, 0, 0.15); tone(990, 0.12, 0.3); },
     wrong: () => tone(160, 0, 0.45, "sawtooth", 0.12),
     black: () => { tone(220, 0, 0.25, "square", 0.08); tone(150, 0.2, 0.4, "square", 0.08); },
-    win: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.14, 0.35, "triangle")),
+    win: fanfare,
     tie: () => { tone(440, 0, 0.3); tone(440, 0.35, 0.3); },
   };
   function play(kind) {

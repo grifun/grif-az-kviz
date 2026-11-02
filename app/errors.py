@@ -37,6 +37,7 @@ MESSAGES = {
     "edit_forbidden": ("Sady lze upravovat jen z počítače, na kterém běží server (nebo nastavte AZKVIZ_EDIT_PASSWORD).",
                        "Sets can only be edited from the computer running the server (or set AZKVIZ_EDIT_PASSWORD)."),
     "edit_password": ("Nesprávné heslo pro úpravy.", "Wrong editing password."),
+    "storage_error": ("Úložiště otázek nefunguje: {error}", "The question storage failed: {error}"),
     "bad_file": ("Soubor nelze načíst: {error}", "Can't load the file: {error}"),
     "game_not_found": ("Hra neexistuje (možná vypršela nebo se server restartoval).",
                        "This game doesn't exist (it may have expired or the server restarted)."),

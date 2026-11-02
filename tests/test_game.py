@@ -401,3 +401,71 @@ def test_non_ascii_edit_password_and_refusals_are_logged(tmp_path, monkeypatch, 
         assert client.put("/api/sets/jina", json={"set": _payload()}, headers={"x-edit-password": "x"}).status_code == 403
     assert any("Set edit refused for PUT /api/sets/jina" in r.getMessage() for r in caplog.records)
     assert client.head("/").status_code == 200
+
+
+# ---- question sets in an S3 bucket (moto fakes S3 in memory) ----
+
+@pytest.fixture
+def s3():
+    boto3 = pytest.importorskip("boto3")
+    moto = pytest.importorskip("moto")
+    with moto.mock_aws():
+        client = boto3.client("s3", region_name="us-east-1", aws_access_key_id="x", aws_secret_access_key="y")
+        client.create_bucket(Bucket="azkviz")
+        yield client
+
+
+def test_s3_store_save_update_delete(s3, caplog):
+    from app.storage import S3Backend
+    store = SetStore(S3Backend("azkviz", "sady", client=s3), min_interval=0)
+    with caplog.at_level("INFO", logger="azkviz"):
+        s = store.save("s3-sada", _payload(), None, who="1.2.3.4")
+    body = json.loads(s3.get_object(Bucket="azkviz", Key="sady/s3-sada.json")["Body"].read())
+    assert body["name"]["cs"] == "Moje sada" and body["yesno"] == [{"q": "Je to tak?", "a": "yes"}]
+    assert any("s3://azkviz/sady/s3-sada.json" in r.getMessage() and "File content" in r.getMessage()
+               for r in caplog.records)
+    s2 = store.save("s3-sada", _payload(open_=(("A?", "a"), ("B?", "b"))), s["version"])
+    assert len(s2["open"]) == 2 and s2["version"] != s["version"]
+    with pytest.raises(g.GameError) as e:
+        store.save("s3-sada", _payload(), s["version"])                 # stale version
+    assert e.value.code == "set_changed"
+    store.delete("s3-sada", s2["version"])
+    keys = [o["Key"] for o in s3.list_objects_v2(Bucket="azkviz")["Contents"]]
+    assert "sady/s3-sada.json" not in keys and any(k.startswith("sady/.deleted/s3-sada-") for k in keys)
+    assert store.sets == {}
+
+
+def test_s3_store_sees_changes_made_directly_in_the_bucket(s3):
+    from app.storage import S3Backend
+    store = SetStore(S3Backend("azkviz", "", client=s3), min_interval=0)
+    s3.put_object(Bucket="azkviz", Key="rucni.json", Body=json.dumps({"id": "rucni", "name": "Ruční",
+                  "open": [{"q": "Q", "a": "A"}]}).encode())
+    s3.put_object(Bucket="azkviz", Key="jina-slozka/ignoruj.json", Body=b"{}")   # subfolders don't count
+    assert store.refresh() is True and list(store.sets) == ["rucni"] and store.errors == []
+
+
+def test_s3_seeding_and_unreachable_storage(s3, tmp_path):
+    from app.storage import S3Backend, seed_if_empty
+    (tmp_path / "a.json").write_text(json.dumps({"id": "a", "name": "A", "open": [{"q": "Q", "a": "A"}]}), encoding="utf-8")
+    backend = S3Backend("azkviz", "nova", client=s3)
+    assert seed_if_empty(backend, tmp_path) == 1 and seed_if_empty(backend, tmp_path) == 0   # only when empty
+    store = SetStore(backend, min_interval=0)
+    assert list(store.sets) == ["a"]
+    s3.delete_object(Bucket="azkviz", Key="nova/a.json")
+    s3.delete_bucket(Bucket="azkviz")                                     # storage goes away
+    assert store.refresh() is True
+    assert list(store.sets) == ["a"]                                       # last good sets are kept
+    assert "storage" in store.errors[0]["message"]["en"]
+    with pytest.raises(g.GameError) as e:
+        store.save("b", _payload(), None)
+    assert e.value.code == "storage_error"
+
+
+def test_s3_backend_from_env():
+    from app.storage import s3_backend_from_env
+    assert s3_backend_from_env({}) is None
+    b = s3_backend_from_env({"S3FOLDER": "muj-bucket/azkviz/sady/", "S3_ACCESS_KEY_ID": "k", "S3_SECRET_ACCESS_KEY": "s"})
+    assert (b.bucket, b.prefix, b.location) == ("muj-bucket", "azkviz/sady/", "s3://muj-bucket/azkviz/sady/")
+    assert b.client.meta.endpoint_url == "https://s3.filebase.io"
+    b = s3_backend_from_env({"S3_BUCKET": "jiny", "S3FOLDER": "otazky", "S3_ENDPOINT": "http://localhost:9000"})
+    assert (b.bucket, b.prefix, b.client.meta.endpoint_url) == ("jiny", "otazky/", "http://localhost:9000")
