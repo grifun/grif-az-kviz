@@ -56,6 +56,17 @@
   fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
   fieldset:disabled .del, fieldset:disabled .btn { opacity: .4; cursor: not-allowed; }
   .ok-msg { color: var(--ok); }
+  .jumpbar { position: sticky; top: 0; z-index: 3; display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+    background: var(--bg); padding: 8px 0 10px; margin-bottom: 4px; }
+  .jumpbar .jlabel { color: var(--muted); font-size: .85rem; margin-right: 2px; }
+  .jump { border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 10px; padding: .5em .9em;
+    font-weight: 700; cursor: pointer; }
+  .jump:hover, .jump.on { border-color: var(--accent); color: var(--accent); }
+  .jumpbar input[type=search] { margin-left: auto; min-width: 180px; flex: 0 1 260px; }
+  .qsec { scroll-margin-top: 64px; }
+  .sechead { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .sechead h3 { margin: 0; margin-right: auto; }
+  .qrow.new textarea, .qrow.new input { border-color: var(--accent); }
 </style>
 </head>
 <body>
@@ -79,6 +90,14 @@
 
   <main>
     <div class="card empty" id="empty" data-i18n="empty_editor"></div>
+      <!-- All three sections stay visible; the bar pinned to the top only scrolls to a section.      It sits outside the fieldset, so it works even while editing is locked (password not entered). -->
+      <nav class="jumpbar" id="jumpbar" hidden>
+        <span class="jlabel" data-i18n="jump_to"></span>
+        <button type="button" class="jump" data-target="secOpen"><span data-i18n="open_questions"></span> <span class="count" id="openCount"></span></button>
+        <button type="button" class="jump" data-target="secYn"><span data-i18n="tab_yesno"></span> <span class="count" id="ynCount"></span></button>
+        <button type="button" class="jump" data-target="secBulk"><span data-i18n="bulk"></span></button>
+        <input type="search" id="search" data-i18n-ph="search">
+      </nav>
     <fieldset id="editor" hidden>
       <div class="banner info" id="staleBanner" hidden style="margin:0 0 14px"><span data-i18n="changed_on_disk"></span>
         <button class="btn small" type="button" id="staleReload" data-i18n="reload_set"></button></div>
@@ -95,26 +114,28 @@
         </div>
       </section>
 
-      <section class="card">
-        <h3><span data-i18n="open_questions"></span> <span class="count" id="openCount"></span></h3>
-        <div class="tools">
-          <input type="search" id="search" data-i18n-ph="search">
-          <button class="btn small" type="button" id="addOpen" data-i18n="add_question"></button>
+
+      <section class="card qsec" id="secOpen">
+        <div class="sechead">
+          <h3 data-i18n="open_questions"></h3>
+          <button class="btn small accent" type="button" id="addOpen" data-i18n="add_question"></button>
         </div>
         <div id="openRows"></div>
       </section>
 
-      <section class="card">
-        <h3><span data-i18n="yesno_questions"></span> <span class="count" id="ynCount"></span></h3>
-        <div class="tools"><button class="btn small" type="button" id="addYn" data-i18n="add_question"></button></div>
+      <section class="card qsec" id="secYn">
+        <div class="sechead">
+          <h3 data-i18n="yesno_questions"></h3>
+          <button class="btn small accent" type="button" id="addYn" data-i18n="add_question"></button>
+        </div>
         <div id="ynRows"></div>
       </section>
 
-      <section class="card">
+      <section class="card qsec" id="secBulk">
         <h3 data-i18n="bulk"></h3>
         <textarea id="bulk" placeholder="Hlavní město Francie? | Paříž&#10;Kdo napsal Máj? | Karel Hynek Mácha | KHM&#10;Je Slunce hvězda? | ANO"></textarea>
         <p class="help" style="color:var(--muted);font-size:.85rem" data-i18n="custom_help"></p>
-        <button class="btn small" type="button" id="bulkAdd" data-i18n="bulk_add"></button> <span class="ok-msg" id="bulkMsg"></span>
+        <button class="btn small accent" type="button" id="bulkAdd" data-i18n="bulk_add"></button> <span class="ok-msg" id="bulkMsg"></span>
       </section>
     </fieldset>
   </main>
@@ -271,7 +292,7 @@
 
   function showEditor() {
     $("empty").hidden = true;
-    $("editor").hidden = false;
+    $("editor").hidden = false; $("jumpbar").hidden = false;
     $("footer").hidden = false;
     $("staleBanner").hidden = true;
     $("fId").value = cur.id;
@@ -311,6 +332,27 @@
     b.type = "button"; b.className = "del"; b.textContent = "✕"; b.title = I18N.t("remove");
     b.onclick = onclick;
     return b;
+  }
+
+  // ---- the pinned bar only scrolls to a section; all sections stay visible ----
+  function scrollToSec(id) {
+    const bar = $("jumpbar").getBoundingClientRect().height;
+    const top = $(id).getBoundingClientRect().top + window.scrollY - bar - 8;
+    const smooth = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: Math.max(0, top), behavior: smooth ? "smooth" : "auto" });
+  }
+  document.querySelectorAll(".jump").forEach((b) => (b.onclick = () => scrollToSec(b.dataset.target)));
+
+  // A new question goes to the top of its own section and gets the cursor.
+  function addQuestion(yn) {
+    (yn ? cur.data.yesno : cur.data.open).unshift(yn ? { q: "", a: "yes" } : { q: "", a: "", h: "" });
+    $("search").value = "";
+    setDirty(true);
+    renderRows();
+    const row = $(yn ? "ynRows" : "openRows").querySelector(".qrow");
+    row.classList.add("new");
+    row.querySelector("textarea").focus({ preventScroll: true });
+    scrollToSec(yn ? "secYn" : "secOpen");
   }
 
   function renderRows() {
@@ -393,7 +435,7 @@
     try {
       await api("DELETE", `/api/sets/${encodeURIComponent(cur.id)}?version=${encodeURIComponent(cur.version)}`);
       cur = null; dirty = false;
-      $("editor").hidden = true; $("footer").hidden = true; $("empty").hidden = false;
+      $("editor").hidden = true; $("jumpbar").hidden = true; $("footer").hidden = true; $("empty").hidden = false;
       try { history.replaceState(null, "", "/sets"); } catch (_) {}
       await loadList();
       AZ.toast(I18N.t("deleted"));
@@ -404,23 +446,30 @@
   }
 
   function bulkAdd() {
-    const add = { open: 0, yesno: 0 };
+    const add = { open: 0, yesno: 0 }, added = { open: [], yesno: [] };
     for (const raw of $("bulk").value.split("\n")) {
       const line = raw.trim();
       if (!line || line.startsWith("#")) continue;
       const [q, a, h] = line.split("|").map((x) => x.trim());
       if (!q || !a) continue;
       const yn = { ano: "yes", a: "yes", yes: "yes", y: "yes", ne: "no", n: "no", no: "no" }[a.toLowerCase()];
-      if (yn) { cur.data.yesno.push({ q, a: yn }); add.yesno++; }
-      else { cur.data.open.push({ q, a, h: h || "" }); add.open++; }
+      if (yn) { added.yesno.push({ q, a: yn }); add.yesno++; }
+      else { added.open.push({ q, a, h: h || "" }); add.open++; }
     }
-    // drop the empty starter row of a new set once real questions arrive
-    cur.data.open = cur.data.open.filter((q, i, arr) => q.q || q.a || q.h || arr.length === 1);
+    // pasted questions go on top, in their pasted order; an empty starter row of a new set is dropped
+    if (add.open) cur.data.open = [...added.open, ...cur.data.open.filter((q) => q.q || q.a || q.h)];
+    if (add.yesno) cur.data.yesno = [...added.yesno, ...cur.data.yesno];
     $("bulk").value = "";
-    $("bulkMsg").textContent = I18N.t("bulk_added", add);
-    setTimeout(() => ($("bulkMsg").textContent = ""), 4000);
-    if (add.open || add.yesno) setDirty(true);
+    if (!add.open && !add.yesno) {
+      $("bulkMsg").textContent = I18N.t("bulk_added", add);
+      setTimeout(() => ($("bulkMsg").textContent = ""), 4000);
+      return;
+    }
+    setDirty(true);
+    $("search").value = "";
     renderRows();
+    renderState(I18N.t("bulk_added", add));
+    scrollToSec(add.open ? "secOpen" : "secYn");   // the new questions are at the top of that section
   }
 
   function download() {
@@ -436,10 +485,8 @@
   ["fLang", "fNameCs", "fNameEn", "fDescCs", "fDescEn", "fId"].forEach((id) => ($(id).oninput = () => setDirty(true)));
   $("fLang").onchange = () => { setDirty(true); renderRows(); };
   $("search").oninput = renderRows;
-  $("addOpen").onclick = () => { cur.data.open.push({ q: "", a: "", h: "" }); $("search").value = ""; setDirty(true); renderRows();
-    const rows = $("openRows").querySelectorAll("textarea"); rows[rows.length - 1].focus(); };
-  $("addYn").onclick = () => { cur.data.yesno.push({ q: "", a: "yes" }); setDirty(true); renderRows();
-    const rows = $("ynRows").querySelectorAll("textarea"); rows[rows.length - 1].focus(); };
+  $("addOpen").onclick = () => addQuestion(false);
+  $("addYn").onclick = () => addQuestion(true);
   $("bulkAdd").onclick = bulkAdd;
   $("save").onclick = save;
   $("discard").onclick = () => cur && !cur.isNew && confirmLeave() && openSet(cur.id, true);
